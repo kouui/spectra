@@ -1,0 +1,17 @@
+#-----------------------------------------------------------------------------
+nRadiative  5
+End
+#-----------------------------------------------------------------------------
+prefix  1s2.2s2.2p6.3s2.3p6.
+#   conf_i    term_i    J_i     conf_j    term_j    J_j    Emission    Nlambda    BackWidth[cm/s]    Fixed    qcore    qwing    filename
+# Ca II H, lambda = 396.8 [nm]
+    4s        2S        1/2     4p        2P        1/2    Voigt       151        5.E+07             0        2.5       120      CaIIH_3968.dat
+# Ca II K, lambda = 393.3 [nm]
+    4s        2S        1/2     4p        2P        3/2    Voigt       101        5.E+07             0        2.5       120      CaIIK_3934.dat
+# Infrared triplet, lambda = 866.2 [nm]
+    3d        2D        3/2     4p        2P        1/2    Voigt       101        5.E+07             0        2.5       40       CaIIir_8662.dat
+# Infrared triplet, lambda = 849.8 [nm]
+    3d        2D        3/2     4p        2P        3/2    Voigt       101        5.E+07             0        2.5       40       CaIIir_8498.dat
+# Infrared triplet, lambda = 854.2 [nm]
+    3d        2D        5/2     4p        2P        3/2    Voigt       201        5.E+07             0        2.5       40       CaIIir_8542.dat
+End
