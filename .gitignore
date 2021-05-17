@@ -137,7 +137,8 @@ ThirdParty/
 # help
 help/
 
-
+# test
+test/
 
 # temp
 #notebooks/StatisticalEquilibrium/SE_Plots-Copy1.ipynb

@@ -27,7 +27,7 @@ _IS_NOGIL     : T_BOOL = False
 
 _IS_PARALLEL  : T_BOOL = False
 
-_IS_CACHE     : T_BOOL = False
+_IS_CACHE     : T_BOOL = True
 
 """whether to turn on the JIT compilation in all *.py files,
 since sphinx does no understand numba thus can not generate documentation for numba jitted functions.

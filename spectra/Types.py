@@ -46,18 +46,30 @@ T_NB_INT3D = nb_types.int64[:,:,:]
 
 T_NB_STR   = nb_types.unicode_type
 
-## : example of using numba types which will not conflict with mypy
-# from _numba.typed import List as nb_List # type: ignore
-# from _numba.typed import Dict as nb_Dict # type: ignore
+
+## comment : using numba.typed.Dict will dramatically slow down 
+##           import time
+## comment : incase of List:
+##             - preprocessing : list --> tuple, these are homogeneous tuples
+##             - njit          : list (--> tuple), list initialized in njit function will
+##                                be converted to numba.typed.List automatically
+##                                might be heterogeneous tuples, so do not convert the list to tuple
+
+## : example of using numba types without conflicting with mypy
+#
+# from numba.typed import List as nb_List # type: ignore
+# from numba.typed import Dict as nb_Dict # type: ignore
+nb_List = list
+
 # a : T_LIST[T_ARRAY] = nb_List()
-# a.append( _numpy.arange(6).reshape(2,3) )
+# a.append( numpy.arange(6).reshape(2,3) )
 # 
 # b : T_DICT[T_STR,T_ARRAY] = nb_Dict.empty(
 #     key_type=T_NB_STR,
 #     value_type=T_NB_FLOAT1D,
 # )
 # 
-# b['posx'] = _numpy.asarray([1, 0.5, 2], dtype=T_FLOAT)
-# b['posy'] = _numpy.asarray([1.5, 3.5, 2], dtype=T_FLOAT)
-# b['velx'] = _numpy.asarray([0.5, 0, 0.7], dtype=T_FLOAT)
-# b['vely'] = _numpy.asarray([0.2, -0.2, 0.1], dtype=T_FLOAT)
+# b['posx'] = numpy.asarray([1, 0.5, 2], dtype=T_FLOAT)
+# b['posy'] = numpy.asarray([1.5, 3.5, 2], dtype=T_FLOAT)
+# b['velx'] = numpy.asarray([0.5, 0, 0.7], dtype=T_FLOAT)
+# b['vely'] = numpy.asarray([0.2, -0.2, 0.1], dtype=T_FLOAT)
