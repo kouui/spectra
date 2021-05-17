@@ -42,8 +42,8 @@ set to
 
 # mypy: ignore-errors
 
-from numba.core import config as nb_config
-from numba import set_num_threads as nb_set_num_threads
+from numba.core import config as nb_config # type: ignore
+from numba import set_num_threads as nb_set_num_threads # type: ignore
 
 def _SET_NUMBA_THREAD_(threading_layer : T_STR ='threadsafe', n_thread : T_INT = 2) -> None:
     r""" """

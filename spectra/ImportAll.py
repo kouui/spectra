@@ -38,8 +38,8 @@ del List
 # https://github.com/numba/numba/issues/4364
 #from numba.typed import Dict as nb_Dict # type: ignore
 
-from numba import njit as nb_njit       # type: ignore
-from numba import vectorize as nb_vec   # type: ignore
+from numba import njit as nb_njit # type: ignore
+from numba import vectorize as nb_vec # type: ignore
 
 #from numba.experimental import jitclass as nb_jitclass # type: ignore
 # comment : currently we will not use jitclass as a data struct in spectra

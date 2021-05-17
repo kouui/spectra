@@ -29,8 +29,9 @@ T_INT         = int      # _numpy.int64
 T_STR         = str
 T_BOOL        = bool
 
-import numpy
-T_ARRAY       = numpy.ndarray
+from numpy import ndarray
+T_ARRAY       = ndarray
+del ndarray
 
 
 #-------------------------------------------------------------------------------
