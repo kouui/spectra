@@ -43,3 +43,10 @@ from numba import vectorize as nb_vec   # type: ignore
 
 #from numba.experimental import jitclass as nb_jitclass # type: ignore
 # comment : currently we will not use jitclass as a data struct in spectra
+
+#-------------------------------------------------------------------------------
+# logging and warning
+#-------------------------------------------------------------------------------
+
+import warnings
+warnings.simplefilter('always')

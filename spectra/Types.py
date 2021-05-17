@@ -39,6 +39,7 @@ T_ARRAY       = numpy.ndarray
 
 T_VEC_IFA   = T_UNION[ T_INT, T_FLOAT, T_ARRAY ]
 T_VEC_FA    = T_UNION[ T_FLOAT, T_ARRAY ]
+T_VEC_IA    = T_UNION[ T_INT, T_ARRAY ]
 
 #-------------------------------------------------------------------------------
 # numba types
