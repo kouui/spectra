@@ -1,4 +1,4 @@
-# mypy: ignore-errors
+
 
 #-------------------------------------------------------------------------------
 # configurations in spectra
@@ -29,6 +29,8 @@ _IS_PARALLEL  : T_BOOL = False
 
 _IS_CACHE     : T_BOOL = True
 
+_VEC_TARGET   : T_STR  = "cpu"
+
 """whether to turn on the JIT compilation in all *.py files,
 since sphinx does no understand numba thus can not generate documentation for numba jitted functions.
 
@@ -37,6 +39,8 @@ set to
 
     False : before generating documentation using sphinx
 """
+
+# mypy: ignore-errors
 
 from numba.core import config as nb_config
 from numba import set_num_threads as nb_set_num_threads

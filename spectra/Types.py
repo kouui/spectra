@@ -16,6 +16,9 @@ from typing import Callable as T_CALLABLE
 from typing import NoReturn as T_NORETURN
 from typing import TypedDict as T_TYPEDICT
 
+from typing import Type as T_TYPE
+
+
 
 #-------------------------------------------------------------------------------
 # fundamental types
@@ -31,20 +34,27 @@ T_ARRAY       = numpy.ndarray
 
 
 #-------------------------------------------------------------------------------
+# advanced types
+#-------------------------------------------------------------------------------
+
+T_VEC_IFA   = T_UNION[ T_INT, T_FLOAT, T_ARRAY ]
+T_VEC_FA    = T_UNION[ T_FLOAT, T_ARRAY ]
+
+#-------------------------------------------------------------------------------
 # numba types
 #-------------------------------------------------------------------------------
 
-import numba.types as nb_types     # type: ignore
-
-T_NB_FLOAT1D = nb_types.float64[:]
-T_NB_FLOAT2D = nb_types.float64[:,:]
-T_NB_FLOAT3D = nb_types.float64[:,:,:]
-
-T_NB_INT1D = nb_types.int64[:]
-T_NB_INT2D = nb_types.int64[:,:]
-T_NB_INT3D = nb_types.int64[:,:,:]
-
-T_NB_STR   = nb_types.unicode_type
+#import numba.types as nb_types     # type: ignore
+#
+#T_NB_FLOAT1D = nb_types.float64[:]         # type: ignore
+#T_NB_FLOAT2D = nb_types.float64[:,:]       # type: ignore
+#T_NB_FLOAT3D = nb_types.float64[:,:,:]     # type: ignore
+#
+#T_NB_INT1D = nb_types.int64[:]             # type: ignore
+#T_NB_INT2D = nb_types.int64[:,:]           # type: ignore
+#T_NB_INT3D = nb_types.int64[:,:,:]         # type: ignore
+#
+#T_NB_STR   = nb_types.unicode_type         # type: ignore
 
 
 ## comment : using numba.typed.Dict will dramatically slow down 
@@ -59,7 +69,7 @@ T_NB_STR   = nb_types.unicode_type
 #
 # from numba.typed import List as nb_List # type: ignore
 # from numba.typed import Dict as nb_Dict # type: ignore
-nb_List = list
+#nb_List = list
 
 # a : T_LIST[T_ARRAY] = nb_List()
 # a.append( numpy.arange(6).reshape(2,3) )

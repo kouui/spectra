@@ -7,6 +7,6 @@
 #    2021/05/18   u.k.   spectra-re
 #-------------------------------------------------------------------------------
 
-import numpy
-import numba   # type: ignore
+#import numpy
+#import numba   # type: ignore
 
