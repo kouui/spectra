@@ -29,9 +29,10 @@ T_INT         = int      # _numpy.int64
 T_STR         = str
 T_BOOL        = bool
 
-from numpy import ndarray
-T_ARRAY       = ndarray
-del ndarray
+# reference : https://numpy.org/devdocs/reference/typing.html
+import numpy as _numpy
+T_ARRAY       = _numpy.ndarray
+del _numpy
 
 
 #-------------------------------------------------------------------------------
