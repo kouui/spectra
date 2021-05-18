@@ -21,7 +21,7 @@ import numpy as _numpy
 #-------------------------------------------------------------------------------
 
 
-@nb_vec( **NB_VEC_KWGS )
+#@nb_vec( **NB_VEC_KWGS )
 def voigt_(a : T_VEC_IFA, x : T_VEC_IFA) -> T_VEC_IFA:
     r"""
     Calculate Doppler width normalized voigt function using polynomial fitting formula.
@@ -138,4 +138,8 @@ def gaussian_(x : T_VEC_IFA) -> T_VEC_IFA:
 #-----------------------------------------------------------------------------
 
 if CFG._IS_JIT:
+    voigt_    = nb_vec(**NB_VEC_KWGS) (voigt_)
     gaussian_ = nb_vec(**NB_VEC_KWGS) (gaussian_)
+
+else:
+    voigt_    = _numpy.vectorize(voigt_, otypes=[T_FLOAT])

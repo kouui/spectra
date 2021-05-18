@@ -39,7 +39,7 @@ def E0_(x : T_VEC_IFA) -> T_VEC_FA:
     """
     return _numpy.exp(-x) / x
 
-@nb_vec( cache=CFG._IS_CACHE, target=CFG._VEC_TARGET, nogil=CFG._IS_NOGIL, nopython=True )
+
 def E1_(x : T_VEC_IFA) -> T_VEC_FA:
     """
     Approximated formula for Exponential integral :math:`E_1(x)`.
@@ -133,6 +133,10 @@ def E3_(x : T_VEC_IFA) -> T_VEC_FA:
 
 if CFG._IS_JIT:
 
-    E0_ = nb_njit( **NB_NJIT_KWGS ) ( E0_ )
-    E2_ = nb_njit( **NB_NJIT_KWGS ) ( E2_ )
-    E3_ = nb_njit( **NB_NJIT_KWGS ) ( E3_ )
+    E0_ = nb_vec( **NB_VEC_KWGS ) ( E0_ )
+    E1_ = nb_vec( **NB_VEC_KWGS ) ( E1_ )
+    E2_ = nb_vec( **NB_VEC_KWGS ) ( E2_ )
+    E3_ = nb_vec( **NB_VEC_KWGS ) ( E3_ )
+
+else:
+    E1_ = _numpy.vectorize(E1_, otypes=[T_FLOAT], cache=True)
