@@ -341,6 +341,8 @@ def Aji_to_Bji_cm_(Aji : T_UNION[T_ARRAY, T_FLOAT],
 
     return Bji
 
+
+
 def Bji_to_Bij_(Bji : T_UNION[T_ARRAY, T_FLOAT], 
                 gi : T_UNION[T_ARRAY, T_INT], 
                 gj : T_UNION[T_ARRAY, T_INT]) -> T_UNION[T_ARRAY, T_FLOAT]:
@@ -649,6 +651,6 @@ def Ufunc_(elm : T_STR, T : T_UNION[T_ARRAY,T_FLOAT,T_INT]) -> T_UNION[T_ARRAY,T
 
 if CFG._IS_JIT:
 
-    boltzmann_distribution_ = nb_vec( cache=CFG._IS_CACHE, target=CFG._VEC_TARGET ) ( boltzmann_distribution_ )
-    saha_distribution_ = nb_vec( cache=CFG._IS_CACHE, target=CFG._VEC_TARGET ) ( saha_distribution_ )
-    planck_cm_ = nb_vec( cache=CFG._IS_CACHE, target=CFG._VEC_TARGET ) ( planck_cm_ )
+    boltzmann_distribution_ = nb_vec( **NB_VEC_KWGS ) ( boltzmann_distribution_ )
+    saha_distribution_      = nb_vec( **NB_VEC_KWGS ) ( saha_distribution_ )
+    planck_cm_              = nb_vec( **NB_VEC_KWGS ) ( planck_cm_ )

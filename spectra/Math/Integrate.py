@@ -226,9 +226,9 @@ def simpson_(y : T_ARRAY,
 
 if CFG._IS_JIT:
 
-    trapze_ = nb_njit( cache=CFG._IS_CACHE, nogil=CFG._IS_NOGIL ) ( trapze_ )
-    _simps_odd_evenspaced_ = nb_njit( cache=CFG._IS_CACHE, nogil=CFG._IS_NOGIL ) ( _simps_odd_evenspaced_ )
-    _simps_odd_ = nb_njit( cache=CFG._IS_CACHE, nogil=CFG._IS_NOGIL ) ( _simps_odd_ )
-    _simps_even_evenspaced_ = nb_njit( cache=CFG._IS_CACHE, nogil=CFG._IS_NOGIL ) ( _simps_even_evenspaced_ )
-    _simps_even_ = nb_njit( cache=CFG._IS_CACHE, nogil=CFG._IS_NOGIL ) ( _simps_even_ )
-    simpson_ = nb_njit( cache=CFG._IS_CACHE, nogil=CFG._IS_NOGIL ) ( simpson_ )
+    trapze_                   = nb_njit( **NB_NJIT_KWGS ) ( trapze_ )
+    _simps_odd_evenspaced_    = nb_njit( **NB_NJIT_KWGS ) ( _simps_odd_evenspaced_ )
+    _simps_odd_               = nb_njit( **NB_NJIT_KWGS ) ( _simps_odd_ )
+    _simps_even_evenspaced_   = nb_njit( **NB_NJIT_KWGS ) ( _simps_even_evenspaced_ )
+    _simps_even_              = nb_njit( **NB_NJIT_KWGS ) ( _simps_even_ )
+    simpson_                  = nb_njit( **NB_NJIT_KWGS ) ( simpson_ )

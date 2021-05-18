@@ -27,7 +27,11 @@ _IS_NOGIL     : T_BOOL = False
 
 _IS_PARALLEL  : T_BOOL = False
 
-_IS_CACHE     : T_BOOL = True
+_IS_CACHE     : T_BOOL = False
+
+_IS_FASTMATH  : T_BOOL = False
+
+_IS_PARALLEL  : T_BOOL = False
 
 _VEC_TARGET   : T_STR  = "cpu"
 

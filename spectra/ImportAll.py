@@ -44,6 +44,28 @@ from numba import vectorize as nb_vec # type: ignore
 #from numba.experimental import jitclass as nb_jitclass # type: ignore
 # comment : currently we will not use jitclass as a data struct in spectra
 
+NB_VEC_KWGS : T_DICT[T_STR, T_UNION[T_BOOL, T_STR]] = {
+    "cache"  : CFG._IS_CACHE, 
+    "target" : CFG._VEC_TARGET, 
+    "nogil"  : CFG._IS_NOGIL, 
+    "nopython" : True,
+    "fastmath" : CFG._IS_FASTMATH,
+}
+
+NB_NJIT_KWGS : T_DICT[T_STR, T_BOOL] = {
+    "cache" : CFG._IS_CACHE, 
+    "nogil" : CFG._IS_NOGIL,
+    "fastmath" : CFG._IS_FASTMATH,
+    "parallel" : False,
+}
+
+NB_NJIT_KWGS_PARALLEL : T_DICT[T_STR, T_BOOL] = {
+    "cache" : CFG._IS_CACHE, 
+    "nogil" : CFG._IS_NOGIL,
+    "fastmath" : CFG._IS_FASTMATH,
+    "parallel" : CFG._IS_PARALLEL,
+}
+
 #-------------------------------------------------------------------------------
 # logging and warning
 #-------------------------------------------------------------------------------

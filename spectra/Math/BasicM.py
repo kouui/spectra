@@ -31,7 +31,7 @@ def is_odd_(n : T_INT) -> T_INT:
 
 if CFG._IS_JIT:
 
-    is_odd_ = nb_vec( cache=CFG._IS_CACHE, target=CFG._VEC_TARGET )( is_odd_ )
+    is_odd_ = nb_vec( **NB_VEC_KWGS )( is_odd_ )
 
 
 

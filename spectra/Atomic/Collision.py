@@ -111,8 +111,8 @@ def CI_rate_coe_(omega : T_VEC_FA, Te : T_VEC_IA, dEik : T_VEC_FA) -> T_VEC_FA:
 #-----------------------------------------------------------------------------
 
 if CFG._IS_JIT:
-    interp_omega_ = nb_njit( cache=CFG._IS_CACHE, nogil=CFG._IS_NOGIL ) ( interp_omega_ )
-    Cij_to_Cji_ = nb_vec( cache=CFG._IS_CACHE, target=CFG._VEC_TARGET ) ( Cij_to_Cji_ )
-    CE_rate_coe_ = nb_vec( cache=CFG._IS_CACHE, target=CFG._VEC_TARGET ) ( CE_rate_coe_ )
-    CI_rate_coe_ = nb_vec( cache=CFG._IS_CACHE, target=CFG._VEC_TARGET ) ( CI_rate_coe_ )
+    interp_omega_     = nb_njit( **NB_NJIT_KWGS ) ( interp_omega_ )
+    Cij_to_Cji_       = nb_vec( **NB_VEC_KWGS ) ( Cij_to_Cji_ )
+    CE_rate_coe_      = nb_vec( **NB_VEC_KWGS ) ( CE_rate_coe_ )
+    CI_rate_coe_      = nb_vec( **NB_VEC_KWGS ) ( CI_rate_coe_ )
     

@@ -24,7 +24,7 @@ from typing import Type as T_TYPE
 # fundamental types
 #-------------------------------------------------------------------------------
 
-T_FLOAT       = float    # _numpy.float64
+T_FLOAT       = float
 T_INT         = int      # _numpy.int64
 T_STR         = str
 T_BOOL        = bool

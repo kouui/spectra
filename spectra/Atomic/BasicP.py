@@ -232,8 +232,8 @@ def vacuum_to_air_(wave : T_UNION[T_FLOAT, T_INT, T_ARRAY],
 #-----------------------------------------------------------------------------
 
 if CFG._IS_JIT:
-    doppler_width_ = nb_vec( cache=CFG._IS_CACHE, target=CFG._VEC_TARGET ) ( doppler_width_ )
-    damping_const_a_ = nb_vec( cache=CFG._IS_CACHE, target=CFG._VEC_TARGET ) ( damping_const_a_ )
+    doppler_width_        = nb_vec( **NB_VEC_KWGS ) ( doppler_width_ )
+    damping_const_a_      = nb_vec( **NB_VEC_KWGS ) ( damping_const_a_ )
     # update_level_gamma_
     # update_line_gamma_
 
