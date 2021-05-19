@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# function definition of naive/basic physics process
+# function definition of process of hydrogen atom
 #-------------------------------------------------------------------------------
 # VERSION
 # 0.1.0 
@@ -926,11 +926,11 @@ if CFG._IS_JIT:
 
 else:
     
-    #gaunt_factor_gingerich_cm_ = _numpy.vectorize( gaunt_factor_gingerich_cm_, **NP_VEC_KWGS )
-    gaunt_factor_coe_ = _numpy.vectorize( gaunt_factor_coe_, **NP_VEC_KWGS )
-    CE_rate_coe_ = _numpy.vectorize( CE_rate_coe_, **NP_VEC_KWGS )
-    CI_rate_coe_ = _numpy.vectorize( CI_rate_coe_, **NP_VEC_KWGS )
-    PI_cross_section_cm_ = _numpy.vectorize( PI_cross_section_cm_, **NP_VEC_KWGS )
-    PI_cross_section_ = _numpy.vectorize( PI_cross_section_, **NP_VEC_KWGS )
-    collisional_broadening_Res_and_Van_ = _numpy.vectorize(collisional_broadening_Res_and_Van_,**NP_VEC_KWGS )
-    collisional_broadening_LinearStark_ = _numpy.vectorize(collisional_broadening_LinearStark_,**NP_VEC_KWGS)
+    #gaunt_factor_gingerich_cm_ = np_vec( gaunt_factor_gingerich_cm_, **NP_VEC_KWGS )
+    gaunt_factor_coe_ = np_vec( gaunt_factor_coe_, **NP_VEC_KWGS )
+    CE_rate_coe_ = np_vec( CE_rate_coe_, **NP_VEC_KWGS )
+    CI_rate_coe_ = np_vec( CI_rate_coe_, **NP_VEC_KWGS )
+    PI_cross_section_cm_ = np_vec( PI_cross_section_cm_, **NP_VEC_KWGS )
+    PI_cross_section_ = np_vec( PI_cross_section_, **NP_VEC_KWGS )
+    collisional_broadening_Res_and_Van_ = np_vec(collisional_broadening_Res_and_Van_,**NP_VEC_KWGS )
+    collisional_broadening_LinearStark_ = np_vec(collisional_broadening_LinearStark_,**NP_VEC_KWGS)

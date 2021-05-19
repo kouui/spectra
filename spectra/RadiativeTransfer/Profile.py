@@ -142,4 +142,4 @@ if CFG._IS_JIT:
     gaussian_ = nb_vec(**NB_VEC_KWGS) (gaussian_)
 
 else:
-    voigt_    = _numpy.vectorize(voigt_, **NP_VEC_KWGS)
+    voigt_    = np_vec(voigt_, **NP_VEC_KWGS)

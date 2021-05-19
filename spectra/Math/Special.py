@@ -139,4 +139,4 @@ if CFG._IS_JIT:
     E3_ = nb_vec( **NB_VEC_KWGS ) ( E3_ )
 
 else:
-    E1_ = _numpy.vectorize(E1_, **NP_VEC_KWGS)
+    E1_ = np_vec(E1_, **NP_VEC_KWGS)

@@ -33,9 +33,9 @@ T_BOOL        = bool
 T_SLICE       = slice
 
 # reference : https://numpy.org/devdocs/reference/typing.html
-import numpy as _numpy
-T_ARRAY       = _numpy.ndarray
-del _numpy
+from numpy import ndarray as _ndarray
+T_ARRAY       = _ndarray
+del _ndarray
 
 
 #-------------------------------------------------------------------------------
