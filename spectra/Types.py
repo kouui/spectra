@@ -7,7 +7,7 @@
 #    2021/05/18   u.k.   spectra-re
 #-------------------------------------------------------------------------------
 
-from typing import Dict as T_DICT
+from typing import Dict as T_DICT, Type
 from typing import List as T_LIST
 from typing import Any as T_ANY
 from typing import Union as T_UNION 
@@ -15,6 +15,7 @@ from typing import Tuple as T_TUPLE
 from typing import Callable as T_CALLABLE
 from typing import NoReturn as T_NORETURN
 from typing import TypedDict as T_TYPEDICT
+
 
 from typing import Type as T_TYPE
 
@@ -29,6 +30,8 @@ T_INT         = int      # _numpy.int64
 T_STR         = str
 T_BOOL        = bool
 
+T_SLICE       = slice
+
 # reference : https://numpy.org/devdocs/reference/typing.html
 import numpy as _numpy
 T_ARRAY       = _numpy.ndarray
@@ -42,6 +45,8 @@ del _numpy
 T_VEC_IFA   = T_UNION[ T_INT, T_FLOAT, T_ARRAY ]
 T_VEC_FA    = T_UNION[ T_FLOAT, T_ARRAY ]
 T_VEC_IA    = T_UNION[ T_INT, T_ARRAY ]
+
+T_UNION_IS = T_UNION[ T_INT, T_SLICE ]
 
 #-------------------------------------------------------------------------------
 # numba types

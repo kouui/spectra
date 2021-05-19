@@ -66,6 +66,11 @@ NB_NJIT_KWGS_PARALLEL : T_DICT[T_STR, T_BOOL] = {
     "parallel" : CFG._IS_PARALLEL,
 }
 
+NP_VEC_KWGS : T_DICT[T_STR, T_ANY] = {
+    "otypes" : [T_FLOAT],
+    "cache" : True,
+}
+
 #-------------------------------------------------------------------------------
 # logging and warning
 #-------------------------------------------------------------------------------
