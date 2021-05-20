@@ -9,31 +9,31 @@
 
 
 
-from enum import Enum
+from enum import IntEnum as _IntEnum
 
-class E_ATOMIC_DATA_SOURCE(Enum):
+class E_ATOMIC_DATA_SOURCE(_IntEnum):
     INTERPOLATE : int = 1
     CALCULATE   : int = 2
 
-class E_ATOM(Enum):
+class E_ATOM(_IntEnum):
     HYDROGEN          : int = 1
     HYDROGEN_LIKE     : int = 2
     NORMAL            : int = 3
 
-class E_COLLISIONAL_TRANSITION(Enum):
+class E_COLLISIONAL_TRANSITION(_IntEnum):
     EXCITATION     : int = 1
     IONIZATION     : int = 2
 
-class E_COLLISIONAL_TRANSITION_SOURCE(Enum):
+class E_COLLISIONAL_TRANSITION_SOURCE(_IntEnum):
     EXCITATION     : int = 1
     IONIZATION     : int = 2
 
 
-class E_COLLISIONAL_TRANSITION_FORMULA(Enum):
+class E_COLLISIONAL_TRANSITION_FORMULA(_IntEnum):
     OMEGA          : int = 1
     UNDEFINED      : int = 2
 
-class E_ABSORPTION_PROFILE_TYPE(Enum):
+class E_ABSORPTION_PROFILE_TYPE(_IntEnum):
     VOIGT          : int = 0
     GAUSSIAN       : int = 1
 

@@ -10,6 +10,11 @@
 from ...ImportAll import *
 
 import numpy as _numpy
+import os
+
+#-------------------------------------------------------------------------------
+# basic function to manipulate data files
+#-------------------------------------------------------------------------------
 
 def skip_line_(ln : T_STR) -> T_BOOL:
     """
@@ -61,7 +66,7 @@ def read_general_info_(rs : T_INT,
     return re, Title, Z, Element, nLevel
 
 def read_Level_info_(rs : T_INT, lns : T_LIST[T_STR], 
-                     Level_info : T_DICT[T_STR,T_STR], 
+                     Level_info : T_DICT[T_STR,T_LIST], 
                      erg : T_ARRAY, g : T_ARRAY, stage : T_ARRAY, 
                      n : T_ARRAY) -> T_INT:
     """read level information to
@@ -328,12 +333,12 @@ def read_PI_table_(rs : T_INT, lns : T_LIST[T_STR], PI_table_dict : T_DICT[T_INT
 
             if ctj_ij in cont_ctj_table:
                 contIndex = cont_ctj_table.index( ctj_ij )
-                PI_coe.idxI[contIndex] = level_info_table.index( ctj_ij[0] )
-                PI_coe.idxJ[contIndex] = level_info_table.index( ctj_ij[1] )
+                PI_coe["idxI"][contIndex] = level_info_table.index( ctj_ij[0] )
+                PI_coe["idxJ"][contIndex] = level_info_table.index( ctj_ij[1] )
 
                 nLambda = int(words[6])
-                PI_coe.nLambda[contIndex] = nLambda
-                PI_coe.alpha0[contIndex] = float(words[8])
+                PI_coe["nLambda"][contIndex] = nLambda
+                PI_coe["alpha0"][contIndex] = float(words[8])
 
                 readMesh = True
                 countMesh = 0
@@ -399,30 +404,145 @@ def read_Mesh_info_(rs : T_INT, lns : T_LIST[T_STR], Mesh_coe : T_ARRAY,
             raise ValueError(f"cannot find {ctj_ij} in line_ctj_table")
         #assert ctj_ij in line_ctj_table
 
-        Mesh_coe.lineIndex[count] = line_ctj_table.index( ctj_ij )
-        Mesh_coe.idxI[count] = level_info_table.index( ctj_ij[0] )
-        Mesh_coe.idxJ[count] = level_info_table.index( ctj_ij[1] )
+        Mesh_coe["lineIndex"][count] = line_ctj_table.index( ctj_ij )
+        Mesh_coe["idxI"][count] = level_info_table.index( ctj_ij[0] )
+        Mesh_coe["idxJ"][count] = level_info_table.index( ctj_ij[1] )
 
         if words[6] == "Voigt":
-            Mesh_coe.ProfileType[count] = E_ABSORPTION_PROFILE_TYPE.VOIGT
+            Mesh_coe["ProfileType"][count] = E_ABSORPTION_PROFILE_TYPE.VOIGT
         elif words[6] == "Gaussian":
-            Mesh_coe.ProfileType[count] = E_ABSORPTION_PROFILE_TYPE.GAUSSIAN
+            Mesh_coe["ProfileType"][count] = E_ABSORPTION_PROFILE_TYPE.GAUSSIAN
         else:
             raise ValueError("Profile type should be either 'Voigt' or 'Gaussian'")
 
-        Mesh_coe.nLambda[count] = int(words[7])
-        Mesh_coe.qcore[count] = float(words[10])
-        Mesh_coe.qwing[count] = float(words[11])
+        Mesh_coe["nLambda"][count] = int(words[7])
+        Mesh_coe["qcore"][count] = float(words[10])
+        Mesh_coe["qwing"][count] = float(words[11])
 
         filename.append( words[12] )
 
         count += 1
 
+def read_conf_(conf_path : T_STR) -> T_DICT[T_STR, T_UNION[None,T_STR]]:
 
+    if not conf_path.endswith(".conf"):
+        raise ValueError("`conf_path` should be a string ends with '.conf'")
 
+    path_dict_keys = ("folder","conf","Level","Aji","CEe","CIe","PI","RadiativeLine","Grotrian")
+    path_dict : T_DICT[T_STR, T_UNION[None,T_STR]] = {
+        key : None for key in path_dict_keys
+    }
 
+    i = conf_path.rfind('/')
+    folder = conf_path[:i+1]
+    path_dict["conf"] = os.path.abspath( conf_path )
 
+    with open(conf_path, "r") as f:
+        lines = f.readlines()
 
+    for ln in lines:
+        words =ln.split()
+        words = [v.strip() for v in words]
+
+        try:
+            _ = path_dict[words[0]]
+        except KeyError:
+            raise ValueError(f"{words[0]} is not a valid key")
+
+        if words[0] == "folder":
+            path_dict[words[0]] = os.path.abspath( os.path.join( folder, words[1] ) )
+        else:
+            if path_dict["folder"] is None:
+                raise ValueError("`folder` configuration should be read first.")
+            path_dict[words[0]] = os.path.abspath( os.path.join( path_dict["folder"], words[1] ) )
+
+    return path_dict
+#-------------------------------------------------------------------------------
+# functions for constructing structs
+#-------------------------------------------------------------------------------
+
+from collections import OrderedDict as _OrderedDict
+
+def read_Atom_Level_(path : T_STR) -> T_TUPLE[T_INT,T_FLOAT,T_FLOAT,T_INT,T_ARRAY,T_TUPLE[T_TUPLE[T_STR,T_STR,T_STR],...]]:
+
+    with open(path, 'r') as f:
+        fLines = f.readlines()
+    #--- read general info
+    rs, title, Z, element, nLevel = read_general_info_(rs=0, lns=fLines)
+    Mass : T_FLOAT = ELEMENT_DICT[element]["Mass"]
+    Abun : T_FLOAT = 10**(ELEMENT_DICT[element]["Abundance"]-12.0)
+    #--- read Level info
+    dtype  = _numpy.dtype([
+                          ('erg',T_FLOAT),            #: level energy, erg
+                          ('g',T_INT),                #: g=2J+1, statistical weight
+                          ('stage',T_INT),            #: ionization stage
+                          ('gamma',T_FLOAT),          #: radiative damping constant of Level
+                          ("isGround",T_BOOL),        #: whether a level is ground level
+                          ('n',T_INT),                #: quantum number n
+                          ])
+    Level = _numpy.zeros(nLevel, dtype=dtype)
+    Level_info : T_DICT[T_STR, T_LIST[T_STR]] = {"configuration" : [], "term" : [], "J": [], "2S+1": []}
+    rs = read_Level_info_(rs, lns=fLines, Level_info=Level_info,
+                                  erg=Level["erg"][:], g=Level["g"][:],
+                                  stage=Level["stage"][:], n=Level["n"][:])
+    Level["erg"][:] *= CST.eV2erg_
+
+    Level["isGround"][:] = 1
+    for k in range(1,nLevel):
+        if Level["stage"][k] == Level["stage"][k-1]:
+            Level["isGround"][k] = 0
+
+    Level["gamma"][:] = 0
+
+    #--- make tuple of tuple (configuration, term, J)
+    _Level_info_table : T_LIST[T_TUPLE[T_STR,T_STR,T_STR]] = []
+    for k in range(nLevel):
+        _Level_info_table.append((Level_info["configuration"][k],
+                                  Level_info["term"][k],
+                                  Level_info["J"][k]))
+    Level_info_table : T_TUPLE[T_TUPLE[T_STR,T_STR,T_STR],...] = tuple(_Level_info_table)
+
+    return Z, Mass, Abun, nLevel, Level, Level_info_table
+
+def nLine_nCont_nTran(stage : T_ARRAY) -> T_TUPLE[T_INT,T_INT,T_INT,T_BOOL] :
+
+    #stage = Level["stage"]
+    nLevel = stage.size
+    count = 0
+    current_stage = stage[0]
+    counter = _OrderedDict()
+    for k,s in enumerate(stage):
+        if s == current_stage:
+            count += 1
+            if k == nLevel-1:
+                counter[current_stage] = count
+                break
+        elif s > current_stage:
+            counter[current_stage] = count
+            count = 1
+            current_stage = s
+            counter[current_stage] = count
+
+    nLine, nCont = 0, 0
+    for k, v in counter.items():
+        nLine += v * (v-1) // 2
+        if k+1 in counter.keys():
+            nCont += v
+    nTran = nLine + nCont
+
+    has_continuum = True if nCont > 0 else False
+
+    return nLine, nCont, nTran, has_continuum
+
+def prepare_idx_ctj_mapping():
+    r"""make tuples for mapping
+    - lineIndex <--> (ctj_i, ctj_j)
+    - lineIndex <--> (idxI, idxJ)
+    - contIndex <--> (ctj_i, ctj_j)
+    - contIndex <--> (idxI, idxJ)
+    """
+
+    pass
 
 
 

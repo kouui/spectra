@@ -12,7 +12,7 @@ from .Types import *
 # Z : atomic number
 # Mass : relative atom mass
 # Abundance : relative abundance, n_ele = 10**(Abundance-12) * n_H
-ELEMENT_DICT : T_DICT[T_STR, T_DICT] = \
+ELEMENT_DICT : T_DICT[T_STR, T_DICT[T_STR,T_UNION[T_INT,T_FLOAT]]] = \
 {
     "He" : {"Z":2, "Mass":4.003, "Abundance":11.00},
     "C"  : {"Z":6, "Mass":12.01, "Abundance":8.54},
