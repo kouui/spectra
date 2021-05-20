@@ -131,6 +131,37 @@ def make_continuum_mesh_(nLambda : T_INT) -> T_ARRAY:
 
     return mesh
 
+def half_to_full_(arr_half : T_ARRAY, isMinus : T_BOOL = False) -> T_ARRAY:
+    r"""
+    create full (anti-)symmetric full array according to half array
+
+    Parameters
+    ----------
+
+    arr_half : T_ARRAY, 1d
+        half array.
+
+    isMinus : T_BOOL
+        True : anti-symmetric full array; False : symmetric full array
+
+    Returns
+    --------
+
+    arr_full : T_ARRAY, 1d,
+        full array.
+
+    """
+    _nLmid = arr_half.shape[0]
+    _nLfull = (_nLmid-1) * 2 + 1
+    _arr_full = _numpy.zeros(_nLfull, dtype=arr_half.dtype)
+
+    fac = -1 if isMinus else 1
+
+    _arr_full[_nLmid:] = arr_half[1:]
+    _arr_full[:_nLmid] = fac * arr_half[::-1]
+
+    return _arr_full
+
 #-----------------------------------------------------------------------------
 # numba optimization
 #-----------------------------------------------------------------------------

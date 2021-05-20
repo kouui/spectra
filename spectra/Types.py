@@ -46,7 +46,9 @@ T_VEC_IFA   = T_UNION[ T_INT, T_FLOAT, T_ARRAY ]
 T_VEC_FA    = T_UNION[ T_FLOAT, T_ARRAY ]
 T_VEC_IA    = T_UNION[ T_INT, T_ARRAY ]
 
-T_UNION_IS = T_UNION[ T_INT, T_SLICE ]
+T_UNION_IS  = T_UNION[ T_INT, T_SLICE ]
+
+T_CTJ_TABLE = T_TUPLE[T_TUPLE[T_STR,T_STR,T_STR]]
 
 #-------------------------------------------------------------------------------
 # numba types

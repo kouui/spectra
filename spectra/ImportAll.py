@@ -11,7 +11,7 @@
 
 from .Types import *
 
-from .Enums import E_DATA, E_ATOM
+from .Enums import *
 from .Elements import ELEMENT_DICT
 
 from . import Constants as CST
@@ -76,6 +76,27 @@ from numpy import vectorize as np_vec
 NP_VEC_KWGS : T_DICT[T_STR, T_ANY] = {
     "otypes" : [T_FLOAT],
     "cache" : True,
+}
+
+#-------------------------------------------------------------------------------
+# struct related functions/class
+#-------------------------------------------------------------------------------
+STRUCT_KWGS : T_DICT[T_STR, T_BOOL] = {
+    "init"        : True, 
+    "repr"        : True, 
+    "eq"          : False, 
+    "order"       : False, 
+    "unsafe_hash" : False, 
+    "frozen"      : True
+}
+
+STRUCT_KWGS_UNFROZEN : T_DICT[T_STR, T_BOOL] = {
+    "init"        : True, 
+    "repr"        : True, 
+    "eq"          : False, 
+    "order"       : False, 
+    "unsafe_hash" : False, 
+    "frozen"      : False
 }
 
 #-------------------------------------------------------------------------------
