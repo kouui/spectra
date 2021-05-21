@@ -12,6 +12,8 @@ from ...ImportAll import *
 import numpy as _numpy
 import os
 
+from collections import OrderedDict as _OrderedDict
+
 #-------------------------------------------------------------------------------
 # basic function to manipulate data files
 #-------------------------------------------------------------------------------
@@ -273,7 +275,7 @@ def read_CI_table_(rs : T_INT, lns : T_LIST[T_STR], CI_table : T_ARRAY,
 
         #_count += 1
 
-def read_PI_nfo_(lns : T_LIST[T_STR]) -> T_TUPLE[T_INT,T_INT]:
+def read_PI_info_(lns : T_LIST[T_STR]) -> T_TUPLE[T_INT,T_INT]:
     """read nCont and nMesh for Photoionization
     """
     for i, ln in enumerate(lns[:]):
@@ -457,6 +459,8 @@ def read_conf_(conf_path : T_STR) -> T_DICT[T_STR, T_UNION[None,T_STR]]:
             path_dict[words[0]] = os.path.abspath( os.path.join( path_dict["folder"], words[1] ) )
 
     return path_dict
+
+
 #-------------------------------------------------------------------------------
 # functions for constructing structs
 #-------------------------------------------------------------------------------
@@ -509,7 +513,6 @@ def nLine_nCont_nTran_(stage : T_ARRAY) -> T_TUPLE[T_INT,T_INT,T_INT,T_BOOL] :
     count = 0
     current_stage = stage[0]
     
-    from collections import OrderedDict as _OrderedDict
     counter = _OrderedDict()
     for k,s in enumerate(stage):
         if s == current_stage:
@@ -691,8 +694,8 @@ def make_Atom_Line_(path : T_UNION[T_STR,None], Level : T_ARRAY,
     # compute Level gamma and Line Gamma
     Line["Gamma"][:] = 0.
     from ...Atomic import BasicP as _BasicP
-    _BasicP.get_Level_gamma(Line["AJI"][:],Line["idxJ"][:],Level["gamma"][:])
-    _BasicP.get_Line_Gamma(Line["idxI"][:],Line["idxJ"][:],Level["gamma"][:],Line["Gamma"][:])
+    _BasicP.update_level_gamma_(Line["AJI"][:],Line["idxJ"][:],Level["gamma"][:])
+    _BasicP.update_line_gamma_(Line["idxI"][:],Line["idxJ"][:],Level["gamma"][:],Line["Gamma"][:])
 
 
     return Line, data_source_Aji
@@ -812,14 +815,109 @@ def make_Atom_RL_(path : T_UNION[T_STR, None],
     
     return Coe, nRadiativeLine
 
-def make_Atom_PI
+def make_Atom_PI_(path : T_UNION[T_STR, None], Level : T_ARRAY, Cont : T_ARRAY, Cont_mesh : T_ARRAY, 
+        atom_type : T_E_ATOM, Level_info_table : T_CTJ_TABLE, Cont_ctj_table : T_CTJ_PAIR_TABLE
+        ) -> T_TUPLE[T_ARRAY,T_ARRAY,T_ARRAY,T_ARRAY, T_E_ATOMIC_DATA_SOURCE]:
+
+    nCont = Cont.shape[0]
+    dtype  = _numpy.dtype([
+                            ('idxI',T_INT),        #: level index, the Level index of lower level
+                            ('idxJ',T_INT),        #: level index, the Level index of upper level
+                            #('lineIndex',T_INT),  #: line index
+                            ('nLambda', T_INT),    #: number of meaningful wavelength mesh point
+                            ('alpha0', T_FLOAT),   #: Photoionization cross section at frequency edge
+                            ('gi',T_INT),          #: statistical weight of lower level
+                            ('gj',T_INT),          #: statistical weight of upper level
+                            ('dEij',T_FLOAT)       #: ionization limit, [:math:`erg`]
+                            ])
+    Coe = _numpy.empty(nCont, dtype=dtype) # in an order of Cont
+    data_source_PI : T_E_ATOMIC_DATA_SOURCE
+    alpha_table : T_ARRAY
+    alpha_table_idxs : T_ARRAY
+    alpha_interp : T_ARRAY
+
+    ## no continuum
+    if nCont == 0:
+        data_source_PI = E_ATOMIC_DATA_SOURCE.CALCULATE
+        alpha_table = _numpy.empty((2,0), dtype=T_FLOAT)
+        alpha_table_idxs = _numpy.empty( (nCont,2), dtype=T_INT )
+        alpha_interp = _numpy.empty( (nCont,0), dtype=T_INT )
+        
+        return alpha_table, alpha_table_idxs, Coe, alpha_interp, data_source_PI
 
     
+    if path is None:
+        data_source_PI = E_ATOMIC_DATA_SOURCE.CALCULATE
+        alpha_table = _numpy.empty((2,0), dtype=T_FLOAT)
+        alpha_table_idxs = _numpy.empty( (nCont,2), dtype=T_INT )
 
+        Coe["idxI"][:] = Cont["idxI"][:]
+        Coe["idxJ"][:] = Cont["idxJ"][:]
+        Coe["nLambda"][:] = Cont_mesh.shape[1]
 
+    else:
+        data_source_PI = E_ATOMIC_DATA_SOURCE.EXPERIMENT
 
+        with open(path, 'r') as f:
+            fLines = f.readlines()
 
+        nCont = Cont.shape[0]
+        nCont1, rs = read_PI_info_(fLines)
 
+        if nCont != nCont1:
+            raise ValueError( "incompatible nCont from `Cont` and `read_PI_info_`" )
 
+        alpha_table_dict : T_DICT[T_INT,T_ARRAY] = _OrderedDict()
+        
+    
+
+        read_PI_table_(rs=rs, lns=fLines,
+                       PI_table_dict = alpha_table_dict,
+                       PI_coe = Coe,
+                       level_info_table=Level_info_table,
+                       cont_ctj_table=Cont_ctj_table)
+
+        
+        sorted_keys = sorted( list(alpha_table_dict.keys()) )
+        if len(sorted_keys) != nCont:
+            raise ValueError("number of read alpha table != nCont")
+
+        n_total_mesh_length = 0
+        for i, key in enumerate(sorted_keys):
+            n_total_mesh_length += alpha_table_dict[key].shape[1]
+
+        alpha_table = _numpy.empty((2,n_total_mesh_length), dtype=T_FLOAT)
+        alpha_table_idxs = _numpy.empty( (nCont,2), dtype=T_INT )
+        bias = 0
+        for i, key in enumerate(sorted_keys):
+            arr2d : T_ARRAY = alpha_table_dict[key]
+            alpha_table_idxs[i,0] = bias
+            alpha_table_idxs[i,1] = alpha_table_idxs[i,0] + arr2d.shape[1]
+            bias = alpha_table_idxs[i,1]
+
+            arr2d[0,:] *= 1.E-7 # unit conversion of wavelength, nm --> cm   (cm, cm^2)
+            arr2d[0,:] += Cont["w0"][i] - arr2d[0,0] # shift edge wavelength to the computed wavelength w0
+
+            alpha_table[:, alpha_table_idxs[i,0] : alpha_table_idxs[i,1] ] = arr2d[:,:]
+
+        for k in range(nCont):
+            Coe["gi"][k]   = Level["g"][Coe["idxI"][k]]
+            Coe["gj"][k]   = Level["g"][Coe["idxJ"][k]]
+            Coe["dEij"][k] = Level["erg"][Coe["idxJ"][k]] - Level["erg"][Coe["idxI"][k]]
+
+    
+    if data_source_PI == E_ATOMIC_DATA_SOURCE.CALCULATE:
+        
+        if atom_type != E_ATOM.HYDROGEN:
+            raise ValueError("We don't have function to calculate Photoionization cross section for non-hydrogen atom")
+        
+        from ...Function.Hydrogen import DegenerateN as _DegenerateN
+        alpha_interp = _DegenerateN.compute_PI_cross_section_(Cont["ni"][:], Cont_mesh[:,:])
+
+    else:
+        from ...Atomic import PhotoIonize as _PhotoIonize
+        alpha_interp = _PhotoIonize.interpolate_PI_alpha_(alpha_table[:,:], alpha_table_idxs[:,:], Cont_mesh[:,:])
+
+    return alpha_table, alpha_table_idxs, Coe, alpha_interp, data_source_PI
 
 

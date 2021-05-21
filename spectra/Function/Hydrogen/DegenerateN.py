@@ -29,7 +29,7 @@ def ratio_Etran_to_Eionize_( ni_arr : T_ARRAY, wave_arr : T_ARRAY ) -> T_ARRAY:
 
     return ratio
 
-def compute_PI_cross_section(ni : T_ARRAY, meshCont : T_ARRAY) -> T_ARRAY:
+def compute_PI_cross_section_(ni : T_ARRAY, meshCont : T_ARRAY) -> T_ARRAY:
 
     ## compute ratio of the transition energy to ionization energy
     Eratio = ratio_Etran_to_Eionize_(ni[:], meshCont[::])

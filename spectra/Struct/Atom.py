@@ -9,7 +9,6 @@
 
 from ..ImportAll import *
 
-
 from dataclasses import dataclass as _dataclass
 
 #-------------------------------------------------------------------------------
@@ -37,8 +36,9 @@ class Collisional_Transition:
 @_dataclass(**STRUCT_KWGS)
 class Photo_Ionization:
 
-    alpha_table      : T_ARRAY # 1d
+    alpha_table      : T_ARRAY # 2d,  (2, ?)
     alpha_table_idxs : T_ARRAY # 2d,  (nCont, 2)
+    Coe              : T_ARRAY # struct
 
     #intensity   : T_ARRAY # 2d   (nCont, nContMesh)
 
@@ -112,10 +112,10 @@ class Atom:
 #-------------------------------------------------------------------------------
 
 from ..Util.AtomUtils import AtomIO as _AtomIO
-import numpy as _numpy
-from collections import OrderedDict as _OrderedDict
+from . import WavelengthMesh as _WavelengthMesh
 
-def init_Atom_(conf_path : T_STR, is_hydrogen : T_BOOL = False ) -> T_TUPLE[Atom, T_DICT[T_STR, T_UNION[None,T_STR]]] : 
+def init_Atom_(conf_path : T_STR, is_hydrogen : T_BOOL = False 
+              ) -> T_TUPLE[Atom, _WavelengthMesh.Wavelength_Mesh, T_DICT[T_STR, T_UNION[None,T_STR]]] : 
     """given the *.conf file, create the Atom struct
 
     Parameters
@@ -223,15 +223,52 @@ def init_Atom_(conf_path : T_STR, is_hydrogen : T_BOOL = False ) -> T_TUPLE[Atom
     
     # make mesh
     #--------------------
-    from . import WavelengthMesh as _WavelengthMesh
-    Wave_Mesh = _WavelengthMesh.init_Wave_Mesh_(Cont, Line, RL.Coe)
+    waveMesh = _WavelengthMesh.init_Wave_Mesh_(Cont, Line, RL.Coe)
 
     # read PI
     #--------------------
+    Cont_mesh : T_ARRAY = waveMesh.Cont_mesh
+    alpha_table, alpha_table_idxs, Coe, alpha_interp, data_source_PI = \
+        _AtomIO.make_Atom_PI_(path_dict["PI"],Level,Cont,Cont_mesh,_atom_type,Level_info_table,Cont_ctj_table)
+    PI = Photo_Ionization(
+        alpha_table = alpha_table,
+        alpha_table_idxs = alpha_table_idxs,
+        Coe = Coe,
+        alpha_interp = alpha_interp
+    )
+    del alpha_table, alpha_table_idxs, Coe, alpha_interp
 
-    
-    atom = Atom()
-    return atom , path_dict
+    # make ATOMIC_DATA_SOURCE
+    _atomic_data_source = ATOMIC_DATA_SOURCE(
+        AJI = data_source_Aji,
+        CE  = data_source_CE,
+        CI  = data_source_CI,
+        PI  = data_source_PI
+    )
+
+    atom = Atom(
+        Z  = Z,
+        Mass = Mass,
+        Abun = Abun,
+        nLevel = nLevel,
+        nLine  = nLine,
+        nCont  = nCont,
+        nTran  = nTran,
+        nRL    = nRL,
+        Level  = Level,
+        Line   = Line,
+        Cont   = Cont,
+        _has_continuum = _has_continuum,
+        _atomic_data_source = _atomic_data_source,
+        _atom_type = _atom_type,
+        _ctj_table = _ctj_table,
+        _idx_table = _idx_table,
+        CE = CE,
+        CI = CI,
+        PI = PI,
+        RL = RL,
+    )
+    return atom, waveMesh , path_dict
 
 
 

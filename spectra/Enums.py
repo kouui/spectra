@@ -37,6 +37,10 @@ class E_ABSORPTION_PROFILE_TYPE(_IntEnum):
     VOIGT          : int = 0
     GAUSSIAN       : int = 1
 
+class E_ATMOSPHERE_COORDINATE_TYPE(_IntEnum):
+    POINT          : int = 0
+    CARTESIAN      : int = 1
+
 
 
 #import numba as _numba

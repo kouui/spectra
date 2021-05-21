@@ -61,7 +61,8 @@ def interpolate_PI_intensity_(backRad : T_ARRAY, continuum_mesh : T_ARRAY) -> T_
 
 
 
-def interpolate_PI_alpha_(PI_alpha_table : T_LIST[T_ARRAY], continuum_mesh : T_ARRAY) -> T_ARRAY:
+def interpolate_PI_alpha_(alpha_table : T_ARRAY, alpha_table_idxs : T_ARRAY,
+                          continuum_mesh : T_ARRAY) -> T_ARRAY:
     """Given continuum mesh, interpolate photoionization cross section
 
     only for the photoionization cross section, we use scipy cubic interpolation
@@ -70,8 +71,11 @@ def interpolate_PI_alpha_(PI_alpha_table : T_LIST[T_ARRAY], continuum_mesh : T_A
     Parameters
     ----------
 
-    PI_alpha_table : T_LIST[T_ARRAY]
-        list of table of photoionization cross section, wavelength_cm vs alpha_cm^2
+    alpha_table : T_ARRAY, 2d
+        concanated array of table of photoionization cross section, wavelength_cm vs alpha_cm^2
+    
+    alpha_table_idxs : T_ARRAY, 2d
+        index array to find the array of each continuum transition in alpha_table
 
     continuum_mesh : T_ARRAY
         continuum mesh
@@ -85,12 +89,14 @@ def interpolate_PI_alpha_(PI_alpha_table : T_LIST[T_ARRAY], continuum_mesh : T_A
 
     alpha_mesh = _numpy.empty(continuum_mesh.shape, dtype=T_FLOAT)
     for k in range(continuum_mesh.shape[0]):
-        alpha_table = PI_alpha_table[k]
+        
+        i, j = alpha_table_idxs[k,:]
+        alpha_table_sub = alpha_table[:, i:j]
 
         ## scipy cubic interpolation
         #fill_value = alpha_table[1,0], alpha_table[1,-1]
-        fill_value = alpha_table[1,-1], alpha_table[1,0] # could be `alpha_table[1,-1],0`
-        bsp_obj : _interp1d = _interp1d(x=alpha_table[0,:], y=alpha_table[1,:], kind="cubic",
+        fill_value = alpha_table_sub[1,-1], alpha_table_sub[1,0] # could be `alpha_table[1,-1],0`
+        bsp_obj : _interp1d = _interp1d(x=alpha_table_sub[0,:], y=alpha_table_sub[1,:], kind="cubic",
                             bounds_error=False, fill_value=fill_value)  # no extrapolate
         alpha_mesh[k,:] = bsp_obj(continuum_mesh[k,:])
 
