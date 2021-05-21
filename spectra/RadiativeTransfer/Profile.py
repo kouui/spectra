@@ -20,9 +20,16 @@ import numpy as _numpy
 #   - gaussian
 #-------------------------------------------------------------------------------
 
+@OVERLOAD
+def voigt_(a : T_FLOAT, x : T_FLOAT) -> T_FLOAT : ...
+@OVERLOAD
+def voigt_(a : T_ARRAY, x : T_ARRAY) -> T_ARRAY : ...
+@OVERLOAD
+def voigt_(a : T_ARRAY, x : T_FLOAT) -> T_ARRAY : ...
+@OVERLOAD
+def voigt_(a : T_FLOAT, x : T_ARRAY) -> T_ARRAY : ...
 
-#@nb_vec( **NB_VEC_KWGS )
-def voigt_(a : T_VEC_IFA, x : T_VEC_IFA) -> T_VEC_IFA:
+def voigt_(a : T_VEC_FA, x : T_VEC_FA) -> T_VEC_FA:
     r"""
     Calculate Doppler width normalized voigt function using polynomial fitting formula.
 
@@ -34,16 +41,16 @@ def voigt_(a : T_VEC_IFA, x : T_VEC_IFA) -> T_VEC_IFA:
     Parameters
     ----------
 
-    a : T_VEC_IFA
+    a : T_VEC_FA
         damping constant normalized by Doppler width, [-]
-    x : T_VEC_IFA
+    x : T_VEC_FA
         Doppler width normalized mesh, 
         [-]
 
     Returns
     -------
 
-    res : float
+    res : T_VEC_FA
         voigt function, normalized to 1, 
         [-]
 
@@ -98,21 +105,26 @@ def voigt_(a : T_VEC_IFA, x : T_VEC_IFA) -> T_VEC_IFA:
     res = F.real / CST.sqrtPi_
     return res
 
-def gaussian_(x : T_VEC_IFA) -> T_VEC_IFA:
+@OVERLOAD
+def gaussian_(x : T_FLOAT) -> T_FLOAT : ...
+@OVERLOAD
+def gaussian_(x : T_ARRAY) -> T_ARRAY : ...
+
+def gaussian_(x : T_VEC_FA) -> T_VEC_FA:
     r"""
     Calculate Doppler width normalized gaussian profile.
 
     Parameters
     ----------
 
-    x : T_VEC_IFA
+    x : T_VEC_FA
         Doppler width normalized mesh, 
         [-]
 
     Returns
     -------
 
-    T_VEC_IFA
+    T_VEC_FA
         gaussian profile, normalized to 1, 
         [-]
 

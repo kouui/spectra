@@ -24,11 +24,11 @@ class Atmosphere0D:
     Te : T_FLOAT
     Vd : T_FLOAT
     Vt : T_FLOAT
-    
-    Tr : T_FLOAT
 
     ndim : T_INT     = 0
     is_gray : T_BOOL = True
+
+    Tr : T_FLOAT     = 6.E3
     use_Tr : T_BOOL  = False
 
     _coord_type : T_E_ATMOSPHERE_COORDINATE_TYPE = E_ATMOSPHERE_COORDINATE_TYPE.POINT
@@ -41,11 +41,11 @@ class AtmosphereC1D:
     Te : T_ARRAY
     Vd : T_ARRAY
     Vt : T_ARRAY
-    
-    Tr : T_FLOAT
 
     is_gray : T_BOOL
     ndim : T_INT     = 1
+    
+    Tr : T_FLOAT     = 6.E3
     use_Tr : T_BOOL  = False
 
     _coord_type : T_E_ATMOSPHERE_COORDINATE_TYPE = E_ATMOSPHERE_COORDINATE_TYPE.CARTESIAN

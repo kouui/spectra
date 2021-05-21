@@ -10,6 +10,7 @@
 #from .ImportExternalModule import *
 
 from .Types import *
+from typing import overload as OVERLOAD
 
 from .Enums import *
 from .Elements import ELEMENT_DICT
@@ -47,7 +48,7 @@ from numba import vectorize as nb_vec # type: ignore
 NB_VEC_KWGS : T_DICT[T_STR, T_UNION[T_BOOL, T_STR]] = {
     "cache"  : CFG._IS_CACHE, 
     "target" : CFG._VEC_TARGET, 
-    "nogil"  : CFG._IS_NOGIL, 
+    #"nogil"  : CFG._IS_NOGIL, 
     "nopython" : True,
     "fastmath" : CFG._IS_FASTMATH,
 }
