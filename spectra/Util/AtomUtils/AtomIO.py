@@ -122,7 +122,7 @@ def read_Level_info_(rs : T_INT, lns : T_LIST[T_STR],
     return re
 
 def read_Line_info_(lns : T_LIST[T_STR], Aji : T_ARRAY, 
-                    line_ctj_table : T_CTJ_TABLE):
+                    line_ctj_table : T_CTJ_PAIR_TABLE):
     """read Line information
     """
     #_count = 0
@@ -175,7 +175,7 @@ def read_CE_temperature_(lns : T_LIST[T_STR]) -> T_TUPLE[T_INT,T_INT,T_LIST[T_FL
 
 def read_CE_table_(rs : T_INT, lns : T_LIST[T_STR], CE_table : T_ARRAY, 
                    idxI : T_ARRAY, idxJ : T_ARRAY, f1 : T_ARRAY, f2 : T_ARRAY, 
-                   level_info_table : T_CTJ_TABLE, line_ctj_table : T_CTJ_TABLE):
+                   level_info_table : T_CTJ_TABLE, line_ctj_table : T_CTJ_PAIR_TABLE):
     """read CE table for interpolation
     """
     #_count = 0
@@ -234,7 +234,7 @@ def read_CI_temperature_(lns : T_LIST[T_STR]) -> T_TUPLE[T_INT,T_INT,T_LIST[T_FL
 
 def read_CI_table_(rs : T_INT, lns : T_LIST[T_STR], CI_table : T_ARRAY, 
                    f2 : T_ARRAY, idxI : T_ARRAY, idxJ : T_ARRAY, 
-                   level_info_table : T_CTJ_TABLE, cont_ctj_table : T_CTJ_TABLE):
+                   level_info_table : T_CTJ_TABLE, cont_ctj_table : T_CTJ_PAIR_TABLE):
     """read CI table for interpolation
     """
     #_count = 0
@@ -297,7 +297,7 @@ def read_PI_nfo_(lns : T_LIST[T_STR]) -> T_TUPLE[T_INT,T_INT]:
     return nCont, re#, _nMesh
 
 def read_PI_table_(rs : T_INT, lns : T_LIST[T_STR], PI_table_dict : T_DICT[T_INT,T_ARRAY], 
-                   PI_coe : T_ARRAY, level_info_table : T_CTJ_TABLE, cont_ctj_table : T_CTJ_TABLE):
+                   PI_coe : T_ARRAY, level_info_table : T_CTJ_TABLE, cont_ctj_table : T_CTJ_PAIR_TABLE):
     """read PI table for interpolation
     """
     countMesh = 0
@@ -378,7 +378,7 @@ def read_Radiative_Line_number_(lns : T_LIST[T_STR]) -> T_TUPLE[T_INT,T_INT]:
     return nRadiativeLine, re
 
 def read_Mesh_info_(rs : T_INT, lns : T_LIST[T_STR], Mesh_coe : T_ARRAY, 
-                    filename : T_LIST[T_STR], level_info_table : T_CTJ_TABLE, line_ctj_table : T_CTJ_TABLE):
+                    filename : T_LIST[T_STR], level_info_table : T_CTJ_TABLE, line_ctj_table : T_CTJ_PAIR_TABLE):
     r"""read CI table for interpolation
     """
     count = 0
@@ -409,9 +409,9 @@ def read_Mesh_info_(rs : T_INT, lns : T_LIST[T_STR], Mesh_coe : T_ARRAY,
         Mesh_coe["idxJ"][count] = level_info_table.index( ctj_ij[1] )
 
         if words[6] == "Voigt":
-            Mesh_coe["ProfileType"][count] = E_ABSORPTION_PROFILE_TYPE.VOIGT
+            Mesh_coe["ProfileType"][count] = int( E_ABSORPTION_PROFILE_TYPE.VOIGT )
         elif words[6] == "Gaussian":
-            Mesh_coe["ProfileType"][count] = E_ABSORPTION_PROFILE_TYPE.GAUSSIAN
+            Mesh_coe["ProfileType"][count] = int( E_ABSORPTION_PROFILE_TYPE.GAUSSIAN )
         else:
             raise ValueError("Profile type should be either 'Voigt' or 'Gaussian'")
 
@@ -461,9 +461,7 @@ def read_conf_(conf_path : T_STR) -> T_DICT[T_STR, T_UNION[None,T_STR]]:
 # functions for constructing structs
 #-------------------------------------------------------------------------------
 
-from collections import OrderedDict as _OrderedDict
-
-def read_Atom_Level_(path : T_STR) -> T_TUPLE[T_INT,T_FLOAT,T_FLOAT,T_INT,T_ARRAY,T_TUPLE[T_TUPLE[T_STR,T_STR,T_STR],...]]:
+def make_Atom_Level_(path : T_STR) -> T_TUPLE[T_INT,T_FLOAT,T_FLOAT,T_INT,T_ARRAY,T_TUPLE[T_TUPLE[T_STR,T_STR,T_STR],...]]:
 
     with open(path, 'r') as f:
         fLines = f.readlines()
@@ -504,12 +502,14 @@ def read_Atom_Level_(path : T_STR) -> T_TUPLE[T_INT,T_FLOAT,T_FLOAT,T_INT,T_ARRA
 
     return Z, Mass, Abun, nLevel, Level, Level_info_table
 
-def nLine_nCont_nTran(stage : T_ARRAY) -> T_TUPLE[T_INT,T_INT,T_INT,T_BOOL] :
+def nLine_nCont_nTran_(stage : T_ARRAY) -> T_TUPLE[T_INT,T_INT,T_INT,T_BOOL] :
 
     #stage = Level["stage"]
     nLevel = stage.size
     count = 0
     current_stage = stage[0]
+    
+    from collections import OrderedDict as _OrderedDict
     counter = _OrderedDict()
     for k,s in enumerate(stage):
         if s == current_stage:
@@ -534,7 +534,8 @@ def nLine_nCont_nTran(stage : T_ARRAY) -> T_TUPLE[T_INT,T_INT,T_INT,T_BOOL] :
 
     return nLine, nCont, nTran, has_continuum
 
-def prepare_idx_ctj_mapping():
+def prepare_idx_ctj_mapping_(Level_info_table : T_CTJ_TABLE, stage : T_ARRAY, isGround : T_ARRAY, 
+    nLine : T_INT, nCont : T_INT) -> T_TUPLE[ T_IDX_PAIR_TABLE,T_CTJ_PAIR_TABLE,T_IDX_PAIR_TABLE,T_CTJ_PAIR_TABLE ]:
     r"""make tuples for mapping
     - lineIndex <--> (ctj_i, ctj_j)
     - lineIndex <--> (idxI, idxJ)
@@ -542,7 +543,275 @@ def prepare_idx_ctj_mapping():
     - contIndex <--> (idxI, idxJ)
     """
 
-    pass
+    _T_INFO_DICT = T_DICT[ T_STR, T_LIST[T_ANY] ]
+
+    def _idx_ctj_into_dict(_dict : _T_INFO_DICT, _i : T_INT, _j : T_INT):
+        _dict["idxI"].append( _i )
+        _dict["idxJ"].append( _j )
+        _dict["ctj_i"].append( Level_info_table[_i] )
+        _dict["ctj_j"].append( Level_info_table[_j] )
+
+    nLevel = stage.size
+
+    Tran_dict : _T_INFO_DICT = {}
+    Line_dict : _T_INFO_DICT = {}
+    Cont_dict : _T_INFO_DICT = {}
+    for key in ("idxI", "idxJ", "ctj_i", "ctj_j"):
+        Tran_dict[key] = []
+        Line_dict[key] = []
+        Cont_dict[key] = []
+
+    for i in range(0, nLevel):
+        for j in range(i+1, nLevel):
+            # i : lower level
+            # j : upper level
+            if stage[i] == stage[j]:
+                _idx_ctj_into_dict(Tran_dict, i, j)
+                _idx_ctj_into_dict(Line_dict, i, j)
+            elif stage[i] == stage[j]-1 and isGround[j]:
+                _idx_ctj_into_dict(Tran_dict, i, j)
+                _idx_ctj_into_dict(Cont_dict, i, j)
+
+    if nLine != len(Line_dict["idxI"]):
+        raise ValueError("incompatible size of Line_dict['idxI']")
+    if nCont != len(Cont_dict["idxI"]):
+        raise ValueError("incompatible size of Cont_dict['idxI']")
+
+    Line_idx_table1 : T_LIST[T_TUPLE[T_INT,T_INT]] = []
+    Line_ctj_table1 : T_LIST[T_CTJ_PAIR] = []
+    for k in range(nLine):
+        Line_idx_table1.append( ( Line_dict["idxI"][k] , Line_dict["idxJ"][k]  ) )
+        Line_ctj_table1.append( ( Line_dict["ctj_i"][k], Line_dict["ctj_j"][k] ) )
+    Line_idx_table = tuple( Line_idx_table1 )
+    Line_ctj_table = tuple( Line_ctj_table1 )
+
+    Cont_idx_table1 : T_LIST[T_TUPLE[T_INT,T_INT]] = []
+    Cont_ctj_table1 : T_LIST[T_CTJ_PAIR] = []
+    for k in range(nCont):
+        Cont_idx_table1.append( ( Cont_dict["idxI"][k] , Cont_dict["idxJ"][k]  ) )
+        Cont_ctj_table1.append( ( Cont_dict["ctj_i"][k], Cont_dict["ctj_j"][k] ) )
+    Cont_idx_table = tuple( Cont_idx_table1 )
+    Cont_ctj_table = tuple( Cont_ctj_table1 )
+
+    return Line_idx_table, Line_ctj_table, Cont_idx_table, Cont_ctj_table
+
+def make_Atom_Cont_(nCont : T_INT, Cont_idx_table : T_IDX_PAIR_TABLE, Level : T_ARRAY) -> T_ARRAY:
+
+    dtype = _numpy.dtype([('idxI',T_INT),            #: level index, the Level index of lower level
+                          ('idxJ',T_INT),            #: level index, the Level index of lower level
+                          ('f0',T_FLOAT),            #: central frequency
+                          ('w0',T_FLOAT),            #: central wavelength in cm
+                          ('w0_AA',T_FLOAT),         #: central wavelength in Angstrom
+                          ('gi',T_INT),              #: statistical weight of lower level
+                          ('gj',T_INT),              #: statistical weight of upper level
+                          ('ni',T_INT),              #: quantum number n of lower level
+                          ('nj',T_INT),              #: quantum number n of upper level
+                          ])
+    Cont = _numpy.zeros(nCont, dtype=dtype)
+
+
+    for k in range(nCont):
+        i, j = Cont_idx_table[k]
+        Cont["idxI"][k], Cont["idxJ"][k] = i, j
+        Cont["f0"][k] = (Level["erg"][j]-Level["erg"][i]) / CST.h_
+    Cont["w0"][:] = CST.c_ / Cont["f0"][:]
+    Cont["w0_AA"][:] = Cont["w0"][:] * 1E+8
+
+    # read gi,gj,ni,nj
+    Cont["gi"][:] = Level["g"][ Cont["idxI"][:] ]
+    Cont["gj"][:] = Level["g"][ Cont["idxJ"][:] ]
+    Cont["ni"][:] = Level["n"][ Cont["idxI"][:] ]
+    Cont["nj"][:] = Level["n"][ Cont["idxJ"][:] ]
+
+    return Cont
+
+def make_Atom_Line_(path : T_UNION[T_STR,None], Level : T_ARRAY, 
+                    Line_idx_table : T_IDX_PAIR_TABLE, Line_ctj_table : T_CTJ_PAIR_TABLE,
+                    atom_type : T_E_ATOM) -> T_TUPLE[T_ARRAY,T_E_ATOMIC_DATA_SOURCE]:
+
+    dtype = _numpy.dtype([('idxI',T_INT),            #: level index, the Level index of lower level
+                          ('idxJ',T_INT),            #: level index, the Level index of lower level
+                          ('AJI',T_FLOAT),           #: Einstein Aji coefficient
+                          ('f0',T_FLOAT),            #: central frequency
+                          ('w0',T_FLOAT),            #: central wavelength in cm
+                          ('w0_AA',T_FLOAT),         #: central wavelength in Angstrom
+                          #("isContinuum",T_INT),    #: continuum tansition identifier, 0: same stage, 1: continuum transition, 2: others
+                          ('Gamma',T_FLOAT),         #: radiative damping constant of Line
+                          ('gi',T_INT),              #: statistical weight of lower level
+                          ('gj',T_INT),              #: statistical weight of upper level
+                          ('ni',T_INT),              #: quantum number n of lower level
+                          ('nj',T_INT),              #: quantum number n of upper level
+                          ('BJI',T_FLOAT),           #: Einstein Bji coefficient
+                          ('BIJ',T_FLOAT),           #: Einstein BIJ coefficient
+                          ])
+    nLine = len( Line_idx_table )
+    Line = _numpy.recarray(nLine, dtype=dtype)
+
+    # idxI and idxJ
+    for k in range(nLine):
+        Line["idxI"][k], Line["idxJ"][k] = Line_idx_table[k]
+
+    Line["AJI"][:] = 0
+
+    data_source_Aji : T_E_ATOMIC_DATA_SOURCE
+    if path is not None: # normal case
+        with open(path, 'r') as f:
+            fLines = f.readlines()
+        read_Line_info_(fLines, Line["AJI"][:], Line_ctj_table)
+        data_source_Aji = E_ATOMIC_DATA_SOURCE.EXPERIMENT
+
+    else: # in case of we want to calculate Aji numerically
+        data_source_Aji = E_ATOMIC_DATA_SOURCE.CALCULATE
+        ## hydrogen has function prepared
+        if atom_type == E_ATOM.HYDROGEN:
+            from ...Atomic import Hydrogen as _Hydrogen
+            Line["AJI"][:] = _Hydrogen.einstein_A_coefficient_(Line['ni'][:], Line['nj'][:])
+        else:
+            raise ValueError("We don't have function to calculate Aji for non-hydrogen atoms")
+
+    # calculate f0, w0, w0_AA
+    for k in range(nLine):
+        i : int = Line["idxI"][k]
+        j : int = Line["idxJ"][k]
+        Line["f0"][k] = (Level["erg"][j]-Level["erg"][i]) / CST.h_
+    Line["w0"][:] = CST.c_ / Line["f0"][:]
+    Line["w0_AA"][:] = Line["w0"][:] * 1.E+8
+
+    # read gi,gj,ni,nj
+    Line["gi"][:] = Level["g"][ Line["idxI"][:] ]
+    Line["gj"][:] = Level["g"][ Line["idxJ"][:] ]
+    Line["ni"][:] = Level["n"][ Line["idxI"][:] ]
+    Line["nj"][:] = Level["n"][ Line["idxJ"][:] ]
+
+
+    # compute Bji, Bij
+    from ...Atomic import LTELib as _LTELib
+    Line["BJI"][:], Line["BIJ"][:] = _LTELib.einsteinA_to_einsteinBs_cm_(Line["AJI"][:], Line["w0"][:], Line["gi"][:], Line["gj"][:])
+
+    # compute Level gamma and Line Gamma
+    Line["Gamma"][:] = 0.
+
+    return Line, data_source_Aji
+
+def make_CECI_(path_electron : T_UNION[T_STR, None], tran_type : T_STR, 
+               n_transition : T_INT, Tran : T_ARRAY, Level : T_ARRAY,
+               Level_info_table : T_CTJ_TABLE, Tran_ctj_table : T_CTJ_PAIR_TABLE
+              ) -> T_TUPLE[T_ARRAY,T_ARRAY,T_ARRAY,T_E_COLLISIONAL_TRANSITION,T_E_COLLISIONAL_TRANSITION_SOURCE,T_E_COLLISIONAL_TRANSITION_FORMULA]:
+
+    ## : transition type
+    _transition_type : T_E_COLLISIONAL_TRANSITION
+    if tran_type == "CE":
+        _transition_type     = E_COLLISIONAL_TRANSITION.EXCITATION
+    elif tran_type == "CI":
+        _transition_type     = E_COLLISIONAL_TRANSITION.IONIZATION
+    else:
+        raise ValueError("only 'CE' and 'CI' are supported for `transition_type` argument.")
+
+    ## : transition source
+    ## currently only electron collisional transition is available
+    _transition_source  : T_E_COLLISIONAL_TRANSITION_SOURCE = E_COLLISIONAL_TRANSITION_SOURCE.ELECTRON
+
+    ## : transition formula
+    ## currently only formula OMEGA is available
+    _transition_formula : T_E_COLLISIONAL_TRANSITION_FORMULA = E_COLLISIONAL_TRANSITION_FORMULA.OMEGA
+    
+    nTe : T_INT
+    dtype  = _numpy.dtype([
+                          ('idxI',T_INT),      #: level index, the Level index of lower level
+                          ('idxJ',T_INT),      #: level index, the Level index of upper level
+                          ('f1',T_INT),        #: a factor for ESC calculation due to fine structure, \Omega * f1 / f2
+                          ('f2',T_INT),        #: a factor for ESC calculation due to fine structure, \Omega * f1 / f2
+                          ('gi',T_INT),        #: statistical weight of lower level
+                          ('gj',T_INT),        #: statistical weight of upper level
+                          ('dEij',T_FLOAT)     #: excitation energy, [:math:`erg`]
+                          ])
+    
+    if path_electron is None:
+        
+        nTe = 0        
+        Te_table    = _numpy.zeros(nTe, dtype=T_FLOAT)
+        Omega_table = _numpy.zeros((n_transition, nTe), dtype=T_FLOAT)
+        Coe         = _numpy.zeros(n_transition, dtype=dtype)
+        Coe["f1"][:] = 1
+        Coe["f2"][:] = 1
+        Coe["idxI"][:] = Tran["idxI"][:]
+        Coe["idxJ"][:] = Tran["idxJ"][:]
+    
+    else:
+        with open(path_electron, 'r') as file:
+            fLines = file.readlines()
+
+        # read Temperature grid for interpolation
+        if tran_type == "CE":
+            rs, nTe, Te, CE_type = read_CE_temperature_(fLines)
+        elif tran_type == "CI":
+            rs, nTe, Te = read_CI_temperature_(fLines)
+
+        Te_table    = _numpy.array(Te, dtype=T_FLOAT)
+        Omega_table = _numpy.zeros((n_transition, nTe), dtype=T_FLOAT)
+        Coe         = _numpy.zeros(n_transition, dtype=dtype)
+
+        if tran_type == "CE":
+            read_CE_table_(rs=rs, lns=fLines, CE_table=Omega_table,
+                    idxI=Coe["idxI"][:],idxJ=Coe["idxJ"][:],
+                    f1=Coe["f1"][:], f2=Coe["f2"][:],
+                    level_info_table=Level_info_table,
+                    line_ctj_table=Tran_ctj_table)
+        
+        elif tran_type == "CI":
+            read_CI_table_(rs=rs, lns=fLines, CI_table=Omega_table,
+                    f2=Coe["f2"][:],
+                    idxI=Coe["idxI"][:],idxJ=Coe["idxJ"][:],
+                    level_info_table=Level_info_table,
+                    cont_ctj_table=Tran_ctj_table)
+
+
+    for k in range(n_transition):
+        Coe["gi"][k] = Level["g"][Coe["idxI"][k]]
+        Coe["gj"][k] = Level["g"][Coe["idxJ"][k]]
+        Coe["dEij"][k] = Level["erg"][Coe["idxJ"][k]] - Level["erg"][Coe["idxI"][k]]
+
+    return Te_table, Omega_table, Coe, _transition_type, _transition_source, _transition_formula
+        
+def make_Atom_RL_(path : T_UNION[T_STR, None], 
+                  Level_info_table : T_CTJ_TABLE, 
+                  Line_ctj_table : T_CTJ_PAIR_TABLE) -> T_TUPLE[T_ARRAY, T_INT]:
+
+    dtype  = _numpy.dtype([
+                          ('idxI',T_INT),         #: level index, the Level index of lower level
+                          ('idxJ',T_INT),         #: level index, the Level index of upper level
+                          ('lineIndex',T_INT),    #: line index
+                          ('ProfileType',T_INT),  #: 0: Voigt; 1: Gaussian
+                          ('qcore', T_FLOAT),
+                          ('qwing', T_FLOAT),
+                          ('nLambda', T_INT),     #: number of meaningful wavelength mesh point
+                          ])
+    
+    nRadiativeLine : T_INT
+    if path is None:
+        nRadiativeLine = 0
+        Coe = _numpy.zeros(nRadiativeLine, dtype=dtype)
+    else:
+        with open(path, 'r') as f:
+            fLines = f.readlines()
+
+        nRadiativeLine, rs = read_Radiative_Line_number_(fLines)
+
+        Coe = _numpy.zeros(nRadiativeLine, dtype=dtype)
+
+        RadLine_filenames : T_LIST[T_STR] = []
+        read_Mesh_info_(rs=rs, lns=fLines,
+                        Mesh_coe = Coe,
+                        filename = RadLine_filenames,
+                        level_info_table=Level_info_table,
+                        line_ctj_table=Line_ctj_table)
+    
+    return Coe, nRadiativeLine
+
+    
+
+
+
 
 
 

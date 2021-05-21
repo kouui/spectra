@@ -12,7 +12,7 @@
 from enum import IntEnum as _IntEnum
 
 class E_ATOMIC_DATA_SOURCE(_IntEnum):
-    INTERPOLATE : int = 1
+    EXPERIMENT  : int = 1
     CALCULATE   : int = 2
 
 class E_ATOM(_IntEnum):
@@ -25,13 +25,13 @@ class E_COLLISIONAL_TRANSITION(_IntEnum):
     IONIZATION     : int = 2
 
 class E_COLLISIONAL_TRANSITION_SOURCE(_IntEnum):
-    EXCITATION     : int = 1
-    IONIZATION     : int = 2
+    ELECTRON     : int = 1
+    PROTON       : int = 2
+    CHARGE_TRANSFER : int = 3
 
 
 class E_COLLISIONAL_TRANSITION_FORMULA(_IntEnum):
     OMEGA          : int = 1
-    UNDEFINED      : int = 2
 
 class E_ABSORPTION_PROFILE_TYPE(_IntEnum):
     VOIGT          : int = 0

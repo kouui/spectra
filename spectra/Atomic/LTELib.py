@@ -261,7 +261,7 @@ def einsteinA_to_einsteinBs_hz_(Aji : T_UNION[T_ARRAY, T_FLOAT],
 
     return Bji, Bij
 
-_removals.remove
+
 def einsteinA_to_einsteinBs_cm_(Aji : T_UNION[T_ARRAY, T_FLOAT], 
        w0 : T_UNION[T_ARRAY, T_FLOAT], gi : T_UNION[T_ARRAY, T_INT],
        gj : T_UNION[T_ARRAY, T_INT])->  T_UNION[ T_TUPLE[T_ARRAY,T_ARRAY], T_TUPLE[T_FLOAT, T_FLOAT] ]:
@@ -314,7 +314,7 @@ def einsteinA_to_einsteinBs_cm_(Aji : T_UNION[T_ARRAY, T_FLOAT],
 
     return Bji, Bij
 
-
+_removals.remove
 def Aji_to_Bji_cm_(Aji : T_UNION[T_ARRAY, T_FLOAT], 
        w0 : T_UNION[T_ARRAY, T_FLOAT]) -> T_UNION[T_ARRAY, T_FLOAT]:
     
@@ -342,7 +342,7 @@ def Aji_to_Bji_cm_(Aji : T_UNION[T_ARRAY, T_FLOAT],
     return Bji
 
 
-
+_removals.remove
 def Bji_to_Bij_(Bji : T_UNION[T_ARRAY, T_FLOAT], 
                 gi : T_UNION[T_ARRAY, T_INT], 
                 gj : T_UNION[T_ARRAY, T_INT]) -> T_UNION[T_ARRAY, T_FLOAT]:

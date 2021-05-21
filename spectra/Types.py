@@ -15,6 +15,7 @@ from typing import Tuple as T_TUPLE
 from typing import Callable as T_CALLABLE
 from typing import NoReturn as T_NORETURN
 from typing import TypedDict as T_TYPEDICT
+from typing import Literal as T_LITERAL
 
 
 from typing import Type as T_TYPE
@@ -50,7 +51,20 @@ T_VEC_IA    = T_UNION[ T_INT, T_ARRAY ]
 
 # types used in struct
 T_CTJ_TABLE = T_TUPLE[T_TUPLE[T_STR,T_STR,T_STR],...]
+T_CTJ_PAIR  = T_TUPLE[T_TUPLE[T_STR,T_STR,T_STR],T_TUPLE[T_STR,T_STR,T_STR]]
+T_CTJ_PAIR_TABLE = T_TUPLE[ T_CTJ_PAIR, ... ]
+T_IDX_PAIR_TABLE = T_TUPLE[T_TUPLE[T_INT,T_INT],...]
 
+#-------------------------------------------------------------------------------
+# Enum types
+#-------------------------------------------------------------------------------
+from .Enums import *
+T_E_ATOMIC_DATA_SOURCE = T_LITERAL[E_ATOMIC_DATA_SOURCE.EXPERIMENT,E_ATOMIC_DATA_SOURCE.CALCULATE]
+T_E_ATOM = T_LITERAL[E_ATOM.HYDROGEN,E_ATOM.HYDROGEN_LIKE,E_ATOM.NORMAL]
+T_E_COLLISIONAL_TRANSITION = T_LITERAL[E_COLLISIONAL_TRANSITION.EXCITATION,E_COLLISIONAL_TRANSITION.IONIZATION]
+T_E_COLLISIONAL_TRANSITION_SOURCE = T_LITERAL[E_COLLISIONAL_TRANSITION_SOURCE.ELECTRON,E_COLLISIONAL_TRANSITION_SOURCE.PROTON,E_COLLISIONAL_TRANSITION_SOURCE.CHARGE_TRANSFER]
+T_E_COLLISIONAL_TRANSITION_FORMULA = T_LITERAL[E_COLLISIONAL_TRANSITION_FORMULA.OMEGA]
+T_E_ABSORPTION_PROFILE_TYPE = T_LITERAL[E_ABSORPTION_PROFILE_TYPE.VOIGT,E_ABSORPTION_PROFILE_TYPE.GAUSSIAN]
 #-------------------------------------------------------------------------------
 # numba types
 #-------------------------------------------------------------------------------

@@ -17,11 +17,18 @@ from dataclasses import dataclass as _dataclass
 #-------------------------------------------------------------------------------
 
 @_dataclass(**STRUCT_KWGS)
+class Radiative_Line:
+
+    nRadiativeLine   : T_INT
+    Coe              : T_ARRAY # struct array
+
+
+@_dataclass(**STRUCT_KWGS)
 class Collisional_Transition:
 
-    _transition_type    : T_INT
-    _transition_source  : T_INT
-    _transition_formula : T_INT
+    _transition_type    : T_E_COLLISIONAL_TRANSITION
+    _transition_source  : T_E_COLLISIONAL_TRANSITION_SOURCE
+    _transition_formula : T_E_COLLISIONAL_TRANSITION_FORMULA
 
     Te_table            : T_ARRAY # 1d
     Omega_table         : T_ARRAY # 2d
@@ -45,24 +52,24 @@ class Photo_Ionization:
 @_dataclass(**STRUCT_KWGS)
 class ATOMIC_DATA_SOURCE:
 
-    AJI : T_INT
-    CE  : T_INT
-    CI  : T_INT
-    PI  : T_INT
+    AJI : T_E_ATOMIC_DATA_SOURCE
+    CE  : T_E_ATOMIC_DATA_SOURCE
+    CI  : T_E_ATOMIC_DATA_SOURCE
+    PI  : T_E_ATOMIC_DATA_SOURCE
 
 
 @_dataclass(**STRUCT_KWGS)
 class CTJ_Table:
 
-    Level : None
-    Line  : None
-    Cont  : None
+    Level : T_CTJ_TABLE
+    Line  : T_CTJ_PAIR_TABLE
+    Cont  : T_CTJ_PAIR_TABLE
 
 @_dataclass(**STRUCT_KWGS)
 class Index_Table:
 
-    Line  : None
-    Cont  : None
+    Line  : T_IDX_PAIR_TABLE
+    Cont  : T_IDX_PAIR_TABLE
 
 
 
@@ -80,16 +87,17 @@ class Atom:
     nLine  : T_INT
     nCont  : T_INT
     nTran  : T_INT
+    nRL    : T_INT 
     
 
     Level  : T_ARRAY    # struct array
     Line   : T_ARRAY    # struct array
     Cont   : T_ARRAY    # struct array
 
-    _has_continuum : T_BOOL
+    _has_continuum      : T_BOOL
 
     _atomic_data_source : ATOMIC_DATA_SOURCE
-    _atom_type          : T_INT
+    _atom_type          : T_E_ATOM
 
     _ctj_table : CTJ_Table
     _idx_table : Index_Table
@@ -97,6 +105,7 @@ class Atom:
     CE         : Collisional_Transition
     CI         : Collisional_Transition
     PI         : Photo_Ionization
+    RL         : Radiative_Line
 
 #-------------------------------------------------------------------------------
 # init function
@@ -128,27 +137,99 @@ def init_Atom_(conf_path : T_STR, is_hydrogen : T_BOOL = False ) -> T_TUPLE[Atom
     # path dict
     #--------------------
     path_dict = _AtomIO.read_conf_(conf_path)
-    
+
+    _atom_type : T_E_ATOM
     if is_hydrogen:
-        atom_type = E_ATOM.HYDROGEN
+        _atom_type = E_ATOM.HYDROGEN
     else:
-        atom_type = E_ATOM.NORMAL
+        _atom_type = E_ATOM.NORMAL
 
     # read Level
     #--------------------
     if path_dict["Level"] is None:
         raise ValueError("Lack of .Level file")
         
-    Z, Mass, Abun, nLevel, Level, Level_info_table = _AtomIO.read_Atom_Level_(path_dict["Level"])
+    Z, Mass, Abun, nLevel, Level, Level_info_table = _AtomIO.make_Atom_Level_(path_dict["Level"])
 
     # nTran nLine nCont
     #--------------------
-    nLine, nCont, nTran, _has_continuum = _AtomIO.nLine_nCont_nTran( Level["stage"] )
+    nLine, nCont, nTran, _has_continuum = _AtomIO.nLine_nCont_nTran_( Level["stage"] )
     if not _has_continuum:
         raise ValueError("Currently we don't support Atomic Model without comtinuum.")
     
+    # ctj and idx table
+    #--------------------
+    Line_idx_table, Line_ctj_table, Cont_idx_table, Cont_ctj_table = \
+        _AtomIO.prepare_idx_ctj_mapping_(Level_info_table, Level["stage"], Level["isGround"], nLine, nCont)
+
+    _ctj_table = CTJ_Table(Level=Level_info_table, Line=Line_ctj_table, Cont=Cont_ctj_table)
+    _idx_table = Index_Table(Line=Line_idx_table, Cont=Cont_idx_table)
+    
+    # make Cont
+    #--------------------
+    if _has_continuum:
+        Cont = _AtomIO.make_Atom_Cont_(nCont, Cont_idx_table, Level)
+    
+    # read Aji
+    #--------------------
+    Line, data_source_Aji = \
+        _AtomIO.make_Atom_Line_(path_dict["Aji"], Level,Line_idx_table,Line_ctj_table,_atom_type)
+    
+    # read CE
+    #--------------------
+    Te_table, Omega_table, Coe, _transition_type, _transition_source, _transition_formula = \
+        _AtomIO.make_CECI_(path_dict["CEe"],"CE",nLine,Line,Level,Level_info_table,Line_ctj_table)
+    CE = Collisional_Transition(
+        _transition_type = _transition_type,
+        _transition_source = _transition_source,
+        _transition_formula = _transition_formula,
+        Te_table = Te_table,
+        Omega_table = Omega_table,
+        Coe = Coe
+    )
+    data_source_CE : T_E_ATOMIC_DATA_SOURCE
+    if Te_table.size == 0:
+        data_source_CE = E_ATOMIC_DATA_SOURCE.CALCULATE
+    else:
+        data_source_CE = E_ATOMIC_DATA_SOURCE.EXPERIMENT
+    
+    del Te_table, Omega_table, Coe, _transition_type, _transition_source, _transition_formula
+    # read CI
+    #--------------------
+    Te_table, Omega_table, Coe, _transition_type, _transition_source, _transition_formula = \
+        _AtomIO.make_CECI_(path_dict["CIe"],"CI",nCont,Cont,Level,Level_info_table,Cont_ctj_table)
+    CI = Collisional_Transition(
+        _transition_type = _transition_type,
+        _transition_source = _transition_source,
+        _transition_formula = _transition_formula,
+        Te_table = Te_table,
+        Omega_table = Omega_table,
+        Coe = Coe
+    )
+    data_source_CI : T_E_ATOMIC_DATA_SOURCE
+    if Te_table.size == 0:
+        data_source_CI = E_ATOMIC_DATA_SOURCE.CALCULATE
+    else:
+        data_source_CI = E_ATOMIC_DATA_SOURCE.EXPERIMENT
+    
+    del Te_table, Omega_table, Coe, _transition_type, _transition_source, _transition_formula
+    
+    # read radiative line
+    #--------------------
+    Coe, nRadiativeLine = \
+        _AtomIO.make_Atom_RL_(path_dict["RadiativeLine"],Level_info_table,Line_ctj_table)
+    RL = Radiative_Line(nRadiativeLine=nRadiativeLine, Coe=Coe)
+    nRL = nRadiativeLine
+    del Coe, nRadiativeLine
+    
+    # make mesh
+    #--------------------
 
 
+    # read PI
+    #--------------------
+
+    
     atom = Atom()
     return atom , path_dict
 
