@@ -167,8 +167,7 @@ def init_Atom_(conf_path : T_STR, is_hydrogen : T_BOOL = False ) -> T_TUPLE[Atom
     
     # make Cont
     #--------------------
-    if _has_continuum:
-        Cont = _AtomIO.make_Atom_Cont_(nCont, Cont_idx_table, Level)
+    Cont = _AtomIO.make_Atom_Cont_(nCont, Cont_idx_table, Level)
     
     # read Aji
     #--------------------
@@ -178,7 +177,7 @@ def init_Atom_(conf_path : T_STR, is_hydrogen : T_BOOL = False ) -> T_TUPLE[Atom
     # read CE
     #--------------------
     Te_table, Omega_table, Coe, _transition_type, _transition_source, _transition_formula = \
-        _AtomIO.make_CECI_(path_dict["CEe"],"CE",nLine,Line,Level,Level_info_table,Line_ctj_table)
+        _AtomIO.make_Atom_CECI_(path_dict["CEe"],"CE",nLine,Line,Level,Level_info_table,Line_ctj_table)
     CE = Collisional_Transition(
         _transition_type = _transition_type,
         _transition_source = _transition_source,
@@ -197,7 +196,7 @@ def init_Atom_(conf_path : T_STR, is_hydrogen : T_BOOL = False ) -> T_TUPLE[Atom
     # read CI
     #--------------------
     Te_table, Omega_table, Coe, _transition_type, _transition_source, _transition_formula = \
-        _AtomIO.make_CECI_(path_dict["CIe"],"CI",nCont,Cont,Level,Level_info_table,Cont_ctj_table)
+        _AtomIO.make_Atom_CECI_(path_dict["CIe"],"CI",nCont,Cont,Level,Level_info_table,Cont_ctj_table)
     CI = Collisional_Transition(
         _transition_type = _transition_type,
         _transition_source = _transition_source,
@@ -224,7 +223,8 @@ def init_Atom_(conf_path : T_STR, is_hydrogen : T_BOOL = False ) -> T_TUPLE[Atom
     
     # make mesh
     #--------------------
-
+    from . import WavelengthMesh as _WavelengthMesh
+    Wave_Mesh = _WavelengthMesh.init_Wave_Mesh_(Cont, Line, RL.Coe)
 
     # read PI
     #--------------------

@@ -608,20 +608,20 @@ def make_Atom_Cont_(nCont : T_INT, Cont_idx_table : T_IDX_PAIR_TABLE, Level : T_
                           ('nj',T_INT),              #: quantum number n of upper level
                           ])
     Cont = _numpy.zeros(nCont, dtype=dtype)
+    
+    if nCont > 0:
+        for k in range(nCont):
+            i, j = Cont_idx_table[k]
+            Cont["idxI"][k], Cont["idxJ"][k] = i, j
+            Cont["f0"][k] = (Level["erg"][j]-Level["erg"][i]) / CST.h_
+        Cont["w0"][:] = CST.c_ / Cont["f0"][:]
+        Cont["w0_AA"][:] = Cont["w0"][:] * 1E+8
 
-
-    for k in range(nCont):
-        i, j = Cont_idx_table[k]
-        Cont["idxI"][k], Cont["idxJ"][k] = i, j
-        Cont["f0"][k] = (Level["erg"][j]-Level["erg"][i]) / CST.h_
-    Cont["w0"][:] = CST.c_ / Cont["f0"][:]
-    Cont["w0_AA"][:] = Cont["w0"][:] * 1E+8
-
-    # read gi,gj,ni,nj
-    Cont["gi"][:] = Level["g"][ Cont["idxI"][:] ]
-    Cont["gj"][:] = Level["g"][ Cont["idxJ"][:] ]
-    Cont["ni"][:] = Level["n"][ Cont["idxI"][:] ]
-    Cont["nj"][:] = Level["n"][ Cont["idxJ"][:] ]
+        # read gi,gj,ni,nj
+        Cont["gi"][:] = Level["g"][ Cont["idxI"][:] ]
+        Cont["gj"][:] = Level["g"][ Cont["idxJ"][:] ]
+        Cont["ni"][:] = Level["n"][ Cont["idxI"][:] ]
+        Cont["nj"][:] = Level["n"][ Cont["idxJ"][:] ]
 
     return Cont
 
@@ -690,10 +690,14 @@ def make_Atom_Line_(path : T_UNION[T_STR,None], Level : T_ARRAY,
 
     # compute Level gamma and Line Gamma
     Line["Gamma"][:] = 0.
+    from ...Atomic import BasicP as _BasicP
+    _BasicP.get_Level_gamma(Line["AJI"][:],Line["idxJ"][:],Level["gamma"][:])
+    _BasicP.get_Line_Gamma(Line["idxI"][:],Line["idxJ"][:],Level["gamma"][:],Line["Gamma"][:])
+
 
     return Line, data_source_Aji
 
-def make_CECI_(path_electron : T_UNION[T_STR, None], tran_type : T_STR, 
+def make_Atom_CECI_(path_electron : T_UNION[T_STR, None], tran_type : T_STR, 
                n_transition : T_INT, Tran : T_ARRAY, Level : T_ARRAY,
                Level_info_table : T_CTJ_TABLE, Tran_ctj_table : T_CTJ_PAIR_TABLE
               ) -> T_TUPLE[T_ARRAY,T_ARRAY,T_ARRAY,T_E_COLLISIONAL_TRANSITION,T_E_COLLISIONAL_TRANSITION_SOURCE,T_E_COLLISIONAL_TRANSITION_FORMULA]:
@@ -807,6 +811,8 @@ def make_Atom_RL_(path : T_UNION[T_STR, None],
                         line_ctj_table=Line_ctj_table)
     
     return Coe, nRadiativeLine
+
+def make_Atom_PI
 
     
 
