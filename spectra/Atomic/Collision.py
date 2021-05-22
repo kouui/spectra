@@ -41,6 +41,11 @@ def interp_omega_(table : T_ARRAY, Te : T_UNION[T_FLOAT,T_INT,T_ARRAY], Te_table
     omega = _numpy.interp( Te, Te_table[:], table[:] )  * f1 / f2
     return omega
 
+@OVERLOAD
+def Cij_to_Cji_(Cij : T_FLOAT,  nj_by_ni_LTE : T_FLOAT) -> T_FLOAT: ...
+@OVERLOAD
+def Cij_to_Cji_(Cij : T_ARRAY,  nj_by_ni_LTE : T_ARRAY) -> T_ARRAY: ...
+
 def Cij_to_Cji_(Cij : T_VEC_FA,  nj_by_ni_LTE : T_VEC_FA) -> T_VEC_FA:
     """Given the LTE population ration and collisional coefficient Cij, 
        calculate collisional coefficient Cji

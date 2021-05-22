@@ -38,11 +38,145 @@ from ...Math import Integrate as _Integrate
 import numpy as _numpy
 
 #-----------------------------------------------------------------------------
+# high level functions with struct as function argument
+#-----------------------------------------------------------------------------
+
+from ...Struct import Atom as _Atom
+from ...Struct import Atmosphere as _Atmosphere
+from ...Struct import WavelengthMesh as _WavelengthMesh
+from ...Struct import Radiation as _Radiation
+from ...Struct import SEquil as _SEquil
+
+def cal_SE_(atom : _Atom.Atom, atmos : _Atmosphere.Atmosphere0D, 
+            wMesh : _WavelengthMesh.Wavelength_Mesh, 
+            radiation : _Radiation.Radiation,
+            Nh_SE : T_UNION[T_ARRAY, None], use_Tr : T_BOOL, 
+            update_bf_intensity : T_BOOL
+            ) -> T_TUPLE[_SEquil.SE_Container,_SEquil.TranRates_Container] :
+    
+    ## : extract variable from structs
+
+    Mass            = atom.Mass
+
+    atom_type       = atom._atom_type
+
+    Level           = atom.Level
+    Line            = atom.Line
+    Cont            = atom.Cont
+
+    nLevel          = atom.nLevel
+    nLine           = atom.nLine
+    nCont           = atom.nCont
+
+    data_src_CE     = atom._atomic_data_source.CE
+    data_src_CI     = atom._atomic_data_source.CI
+
+    CE_Omega_table  = atom.CE.Omega_table
+    CE_Te_table     = atom.CE.Te_table
+    CE_Coe          = atom.CE.Coe
+
+    CI_Omega_table  = atom.CI.Omega_table
+    CI_Te_table     = atom.CI.Te_table
+    CI_Coe          = atom.CI.Coe
+
+    Cont_mesh       = wMesh.Cont_mesh
+
+    alpha_interp    = atom.PI.alpha_interp
+
+    PI_intensity    = radiation.PI_intensity
+    backRad         = radiation.backRad
+
+    Line_mesh_Coe   = wMesh.Line_Coe
+    Line_mesh       = wMesh.Line_mesh
+    Line_mesh_idxs  = wMesh.Line_mesh_idxs
+
+    Te              = atmos.Te
+    Ne              = atmos.Ne
+    Vt              = atmos.Vt
+    Vd              = atmos.Vd
+    Tr              = atmos.Tr
+
+    Nh_I_ground : T_FLOAT
+    if Nh_SE is None:
+        Nh_I_ground = atmos.Nh # all hydrogen atoms are in its H I ground Level
+    else:
+        Nh_I_ground = atmos.Nh * Nh_SE[0] / Nh_SE.sum()
+
+    Aji             = Line["AJI"][:]
+
+    ## : append idxI, idxJ
+    idxI = _numpy.empty(nLine+nCont, dtype=T_INT)
+    idxJ = _numpy.empty(nLine+nCont, dtype=T_INT)
+    idxI[:nLine] = Line["idxI"][:]
+    idxJ[:nLine] = Line["idxJ"][:]
+    idxI[nLine:] = Cont["idxI"][:]
+    idxJ[nLine:] = Cont["idxJ"][:]
+
+    ## : Given ..., perform SE to calculate n_SE
+
+    n_LTE , nj_by_ni = _ni_nj_LTE_(Level, Line, Cont, Te, Ne)
+    #nj_by_ni_Line = nj_by_ni[:nLine]
+    nj_by_ni_Cont = nj_by_ni[nLine:]
+
+    Rik, Rki_stim, Rki_spon = _bf_R_rate_(
+        Cont, Cont_mesh[:,:], Te, nj_by_ni_Cont[:], alpha_interp[:,:],
+        PI_intensity[:,:], backRad[:,:], Tr, use_Tr, update_bf_intensity
+        )
+
+    Bij_Jbar, Bji_Jbar, wave_mesh_cm_shifted_all, absorb_prof_cm_all, Jbar_all  = \
+        _B_Jbar_(
+            Line, Line_mesh_Coe, Line_mesh[:], Line_mesh_idxs[:,:],
+            Te, Vt, Vd, Ne, Nh_I_ground, Mass, atom_type, backRad[:,:], Tr, use_Tr
+        )
+
+    Cij = _get_Cij_(
+        Line, Cont, Te, atom_type, 
+        CE_Omega_table, CE_Te_table, CE_Coe, data_src_CE,
+        CI_Omega_table, CI_Te_table, CI_Coe, data_src_CI
+    )
+    Cji = _Collision.Cij_to_Cji_(Cij[:], nj_by_ni[:])
+
+    Rij, Rji_stim, Rji_spon = _make_Rji_Rij_(
+        Aji[:], Bji_Jbar[:], Bij_Jbar[:], 
+        Rki_spon[:], Rki_stim[:], Rik[:]
+        )
+    n_SE = _solve_SE_( 
+        nLevel, idxI[:], idxJ[:], 
+        Rji_spon[:], Rji_stim[:], Rij[:], 
+        Cji[:], Cij[:], Ne
+        )
+
+    SE_con = _SEquil.SE_Container(
+        n_SE = n_SE,
+        n_LTE = n_LTE,
+        nj_by_ni = nj_by_ni,
+        wave_mesh_shifted_1d = wave_mesh_cm_shifted_all,
+        absorb_prof_1d = absorb_prof_cm_all,
+        Line_mesh_idxs = Line_mesh_idxs,
+        Jbar = Jbar_all,
+    )
+
+    tran_rate_con = _SEquil.TranRates_Container(
+        Rji_spon = Rji_spon[:],
+        Rji_stim=Rji_stim[:],
+        Rij=Rij[:],
+        Cji_Ne = Cji[:] * Ne,
+        Cij_Ne = Cij[:] * Ne,
+    )
+
+    return SE_con, tran_rate_con
+    
+    
+
+    
+
+
+#-----------------------------------------------------------------------------
 # mid level functions with array as function argument
 #-----------------------------------------------------------------------------
 
 def _ni_nj_LTE_(Level : T_ARRAY, Line : T_ARRAY, Cont : T_ARRAY, 
-       Te : T_FLOAT, Ne : T_FLOAT) -> T_TUPLE[T_ARRAY,T_ARRAY,T_ARRAY]:
+       Te : T_FLOAT, Ne : T_FLOAT) -> T_TUPLE[T_ARRAY,T_ARRAY]:
 
     nLevel = Level.shape[0]
     nLine  = Line.shape[0]
@@ -78,7 +212,7 @@ def _ni_nj_LTE_(Level : T_ARRAY, Line : T_ARRAY, Cont : T_ARRAY,
 
     ni = _nj_by_ni_To_ni_(nj_by_ni[:], idxI[:], idxJ[:], isGround[:], nLine)
 
-    return ni, nj_by_ni[:nLine], nj_by_ni[nLine:]
+    return ni, nj_by_ni
 
 
 def _nj_by_ni_To_ni_(nj_by_ni : T_ARRAY, idxI : T_ARRAY, idxJ : T_ARRAY, isGround : T_ARRAY, nLine : T_INT) -> T_ARRAY:
@@ -277,13 +411,12 @@ def _get_Cij_(Line : T_ARRAY, Cont : T_ARRAY, Te : T_FLOAT, atom_type : T_E_ATOM
 
     return Cij
 
-def _solve_SE_(nLevel : T_INT, idxI : T_ARRAY, idxJ : T_ARRAY, 
-               Aji : T_ARRAY, Bji_Jbar : T_ARRAY, Bij_Jbar : T_ARRAY,
-               Rki_spon : T_ARRAY, Rki_stim : T_ARRAY, Rik : T_ARRAY,
-               Cji, Cij, Ne) -> T_ARRAY :
-
-    nTran = Cji.shape[0]
+def _make_Rji_Rij_(Aji : T_ARRAY, Bji_Jbar : T_ARRAY, Bij_Jbar : T_ARRAY,
+                   Rki_spon : T_ARRAY, Rki_stim : T_ARRAY, Rik : T_ARRAY
+                  ) -> T_TUPLE[T_ARRAY,T_ARRAY,T_ARRAY]:
     nLine = Aji.shape[0]
+    nCont = Rik.shape[0]
+    nTran = nLine + nCont
     Rji_spon = _numpy.empty(nTran, dtype=T_FLOAT)
     Rji_stim = _numpy.empty(nTran, dtype=T_FLOAT)
     Rij      = _numpy.empty(nTran, dtype=T_FLOAT)
@@ -293,7 +426,13 @@ def _solve_SE_(nLevel : T_INT, idxI : T_ARRAY, idxJ : T_ARRAY,
     Rji_stim[:nLine] = Bji_Jbar[:]
     Rji_stim[nLine:] = Rki_stim[:]
     Rij[:nLine]      = Bij_Jbar[:]
-    Rij[nLine:]      = Rij[:]
+    Rij[nLine:]      = Rik[:]
+    
+    return Rij, Rji_stim, Rji_spon
+
+def _solve_SE_(nLevel : T_INT, idxI : T_ARRAY, idxJ : T_ARRAY, 
+               Rji_spon : T_ARRAY, Rji_stim : T_ARRAY, Rij : T_ARRAY,
+               Cji : T_ARRAY, Cij : T_ARRAY, Ne : T_FLOAT) -> T_ARRAY :
 
     Cmat = _numpy.zeros((nLevel,nLevel), dtype=T_FLOAT)
     _SEsolver.set_matrixC_(Cmat[:,:],Cji[:],Cij[:],idxI[:],idxJ,Ne)
@@ -305,10 +444,6 @@ def _solve_SE_(nLevel : T_INT, idxI : T_ARRAY, idxJ : T_ARRAY,
 
     return n_SE
 
-
-#-----------------------------------------------------------------------------
-# high level functions with struct as function argument
-#-----------------------------------------------------------------------------
 
 
 #-------------------------------------------------------------------------------
