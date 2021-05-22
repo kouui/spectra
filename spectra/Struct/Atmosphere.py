@@ -31,6 +31,8 @@ class Atmosphere0D:
     Tr : T_FLOAT     = 6.E3
     use_Tr : T_BOOL  = False
 
+    doppler_shift_continuum : T_BOOL = False
+
     _coord_type : T_E_ATMOSPHERE_COORDINATE_TYPE = E_ATMOSPHERE_COORDINATE_TYPE.POINT
 
 @_dataclass(**STRUCT_KWGS_UNFROZEN)
@@ -47,5 +49,7 @@ class AtmosphereC1D:
     
     Tr : T_FLOAT     = 6.E3
     use_Tr : T_BOOL  = False
+
+    doppler_shift_continuum : T_BOOL = False
 
     _coord_type : T_E_ATMOSPHERE_COORDINATE_TYPE = E_ATMOSPHERE_COORDINATE_TYPE.CARTESIAN

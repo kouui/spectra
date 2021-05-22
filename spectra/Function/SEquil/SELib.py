@@ -50,8 +50,7 @@ from ...Struct import SEquil as _SEquil
 def cal_SE_(atom : _Atom.Atom, atmos : _Atmosphere.Atmosphere0D, 
             wMesh : _WavelengthMesh.Wavelength_Mesh, 
             radiation : _Radiation.Radiation,
-            Nh_SE : T_UNION[T_ARRAY, None], use_Tr : T_BOOL, 
-            update_bf_intensity : T_BOOL
+            Nh_SE : T_UNION[T_ARRAY, None],
             ) -> T_TUPLE[_SEquil.SE_Container,_SEquil.TranRates_Container] :
     
     ## : extract variable from structs
@@ -96,6 +95,12 @@ def cal_SE_(atom : _Atom.Atom, atmos : _Atmosphere.Atmosphere0D,
     Vd              = atmos.Vd
     Tr              = atmos.Tr
 
+    use_Tr          = atmos.use_Tr
+
+    doppler_shift_continuum = atmos.doppler_shift_continuum
+    if doppler_shift_continuum :
+        raise NotImplementedError("Doppler shift of continuum wavelength mesh not yet implemented.")
+
     Nh_I_ground : T_FLOAT
     if Nh_SE is None:
         Nh_I_ground = atmos.Nh # all hydrogen atoms are in its H I ground Level
@@ -120,7 +125,7 @@ def cal_SE_(atom : _Atom.Atom, atmos : _Atmosphere.Atmosphere0D,
 
     Rik, Rki_stim, Rki_spon = _bf_R_rate_(
         Cont, Cont_mesh[:,:], Te, nj_by_ni_Cont[:], alpha_interp[:,:],
-        PI_intensity[:,:], backRad[:,:], Tr, use_Tr, update_bf_intensity
+        PI_intensity[:,:], backRad[:,:], Tr, use_Tr, doppler_shift_continuum
         )
 
     Bij_Jbar, Bji_Jbar, wave_mesh_cm_shifted_all, absorb_prof_cm_all, Jbar_all  = \
@@ -244,10 +249,10 @@ def _nj_by_ni_To_ni_(nj_by_ni : T_ARRAY, idxI : T_ARRAY, idxJ : T_ARRAY, isGroun
 def _bf_R_rate_(Cont : T_ARRAY, Cont_mesh : T_ARRAY, Te : T_FLOAT, 
                 nj_by_ni_Cont : T_ARRAY, alpha_interp : T_ARRAY, PI_I : T_ARRAY, 
                 backRad : T_ARRAY, Tr : T_FLOAT, 
-                use_Tr : T_BOOL, update_intensity : T_BOOL,
+                use_Tr : T_BOOL, doppler_shift_continuum : T_BOOL,
                 ) -> T_TUPLE[T_ARRAY,T_ARRAY,T_ARRAY]:
 
-    if update_intensity:
+    if doppler_shift_continuum:
         if use_Tr:
             PI_I[:,:] = _LTELib.planck_cm_(Cont_mesh[:,:], Tr)
         else:

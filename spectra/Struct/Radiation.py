@@ -23,12 +23,16 @@ class Radiation:
 
 from . import Atom as _Atom
 from . import WavelengthMesh as _WavelengthMesh
+from . import Atmosphere as _Atmosphere
+
 from ..Atomic import PhotoIonize as _PhotoIonize
+from ..Atomic import LTELib as _LTELib
 
 import numpy as _numpy
 import os
 
-def init_Radiation_(atom : _Atom.Atom, wMesh : _WavelengthMesh.Wavelength_Mesh) -> Radiation:
+def init_Radiation_(atmos : T_UNION[_Atmosphere.Atmosphere0D,_Atmosphere.AtmosphereC1D],
+                    wMesh : _WavelengthMesh.Wavelength_Mesh) -> Radiation:
 
     root=CFG._ROOT_DIR
 
@@ -36,7 +40,11 @@ def init_Radiation_(atom : _Atom.Atom, wMesh : _WavelengthMesh.Wavelength_Mesh) 
     backRad[0,:] *= 1E-8
     
     Cont_mesh = wMesh.Cont_mesh
-    PI_intensity = _PhotoIonize.interpolate_PI_intensity_(backRad[:,:], Cont_mesh[:,:])
+    if atmos.use_Tr:
+        Tr = atmos.Tr
+        PI_intensity = _LTELib.planck_cm_(Cont_mesh[:,:], Tr)
+    else:
+        PI_intensity = _PhotoIonize.interpolate_PI_intensity_(backRad[:,:], Cont_mesh[:,:])
 
     radiation = Radiation(
         backRad      = backRad,
