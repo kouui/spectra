@@ -21,6 +21,14 @@ from numpy import log as _log
 
 from debtcollector import removals as _removals  # type: ignore
 
+@OVERLOAD
+def ratio_Etran_to_Eionize_(ni : T_INT, w : T_FLOAT) -> T_FLOAT : ...
+@OVERLOAD
+def ratio_Etran_to_Eionize_(ni : T_ARRAY, w : T_FLOAT) -> T_ARRAY : ...
+@OVERLOAD
+def ratio_Etran_to_Eionize_(ni : T_ARRAY, w : T_ARRAY) -> T_ARRAY : ...
+@OVERLOAD
+def ratio_Etran_to_Eionize_(ni : T_INT, w : T_ARRAY) -> T_ARRAY : ...
 
 def ratio_Etran_to_Eionize_(ni : T_VEC_IA, w : T_VEC_FA) -> T_VEC_FA:
     """
@@ -620,6 +628,14 @@ def CI_rate_coe_clark_(ni : T_VEC_IA, Te : T_VEC_IFA) -> T_VEC_FA:
 #-----------------------------------------------------------------------------
 # Photoionization cross section
 #-----------------------------------------------------------------------------
+@OVERLOAD
+def PI_cross_section_cm_(ni : T_INT, w : T_FLOAT, Z : T_INT) -> T_FLOAT: ...
+@OVERLOAD
+def PI_cross_section_cm_(ni : T_ARRAY, w : T_FLOAT, Z : T_INT) -> T_ARRAY: ...
+@OVERLOAD
+def PI_cross_section_cm_(ni : T_ARRAY, w : T_ARRAY, Z : T_INT) -> T_ARRAY: ...
+@OVERLOAD
+def PI_cross_section_cm_(ni : T_INT, w : T_ARRAY, Z : T_INT) -> T_ARRAY: ...
 
 def PI_cross_section_cm_(ni : T_VEC_IA, w : T_VEC_IFA, Z : T_VEC_IA) -> T_VEC_FA:
     r"""
@@ -671,6 +687,11 @@ def PI_cross_section_cm_(ni : T_VEC_IA, w : T_VEC_IFA, Z : T_VEC_IA) -> T_VEC_FA
     else:
         alpha = 2.815E29 * Z**4  / (v**3 * ni**5) * gaunt_factor_(ni, x)
     return alpha
+
+@OVERLOAD
+def PI_cross_section_(ni : T_INT, x : T_FLOAT, Z : T_INT) -> T_FLOAT: ...
+@OVERLOAD
+def PI_cross_section_(ni : T_ARRAY, x : T_ARRAY, Z : T_INT) -> T_ARRAY: ...
 
 def PI_cross_section_(ni : T_VEC_IA, x : T_VEC_IFA, Z : T_VEC_IA) -> T_VEC_FA:
     r"""
@@ -782,6 +803,12 @@ def Rki_spon_rate_coe_(ni : T_VEC_IA, Te : T_VEC_IFA) -> T_VEC_FA:
 #   2. Van der Waals broadening
 #   3. Linear Stark broadening
 #-----------------------------------------------------------------------------
+@OVERLOAD
+def collisional_broadening_Res_and_Van_( ni : T_INT, nj : T_INT, nH_I_ground : T_FLOAT, Te : T_FLOAT) -> T_FLOAT: ...
+@OVERLOAD
+def collisional_broadening_Res_and_Van_( ni : T_INT, nj : T_INT, nH_I_ground : T_ARRAY, Te : T_ARRAY) -> T_ARRAY: ...
+@OVERLOAD
+def collisional_broadening_Res_and_Van_( ni : T_ARRAY, nj : T_ARRAY, nH_I_ground : T_FLOAT, Te : T_FLOAT) -> T_ARRAY: ...
 
 def collisional_broadening_Res_and_Van_( ni : T_VEC_IA, nj : T_VEC_IA, 
            nH_I_ground : T_VEC_FA, Te : T_VEC_IFA) -> T_VEC_FA:
@@ -848,10 +875,14 @@ def collisional_broadening_Res_and_Van_( ni : T_VEC_IA, nj : T_VEC_IA,
 
     return gamma
 
+@OVERLOAD
+def collisional_broadening_LinearStark_( ni : T_INT, nj : T_INT, Ne : T_FLOAT) -> T_FLOAT: ...
+@OVERLOAD
+def collisional_broadening_LinearStark_( ni : T_INT, nj : T_INT, Ne : T_ARRAY) -> T_ARRAY: ...
+@OVERLOAD
+def collisional_broadening_LinearStark_( ni : T_ARRAY, nj : T_ARRAY, Ne : T_FLOAT) -> T_ARRAY: ...
 
-
-def collisional_broadening_LinearStark_( ni : T_VEC_IA, nj : T_VEC_FA, 
-          Ne : T_VEC_IFA) -> T_VEC_FA:
+def collisional_broadening_LinearStark_( ni : T_VEC_IA, nj : T_VEC_IA, Ne : T_VEC_IFA) -> T_VEC_FA:
     r"""
 
     collisional broadening caused by

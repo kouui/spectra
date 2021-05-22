@@ -12,6 +12,18 @@ import numpy as _numpy
 
 from debtcollector import removals as _removals  # type: ignore
 
+@OVERLOAD
+def boltzmann_distribution_(gi : T_INT, gj : T_INT, Eji : T_FLOAT, Te : T_INT) -> T_FLOAT: ...
+
+@OVERLOAD
+def boltzmann_distribution_(gi : T_INT, gj : T_INT, Eji : T_FLOAT, Te : T_FLOAT) -> T_FLOAT: ...
+
+@OVERLOAD
+def boltzmann_distribution_(gi : T_ARRAY, gj : T_ARRAY, Eji : T_ARRAY, Te : T_FLOAT) -> T_ARRAY: ...
+
+@OVERLOAD
+def boltzmann_distribution_(gi : T_INT, gj : T_INT, Eji : T_FLOAT, Te : T_ARRAY) -> T_ARRAY: ...
+
 
 def boltzmann_distribution_(gi : T_VEC_IA, gj : T_VEC_IA, 
                             Eji : T_VEC_FA, Te : T_VEC_IFA) -> T_VEC_FA:
@@ -40,6 +52,13 @@ def boltzmann_distribution_(gi : T_VEC_IA, gj : T_VEC_IA,
     ratio = gj / gi * _numpy.exp( -Eji / kT )
 
     return ratio
+
+@OVERLOAD
+def saha_distribution_(gi : T_INT, gk : T_INT, chi : T_FLOAT, Ne : T_FLOAT, Te : T_FLOAT) -> T_FLOAT: ...
+@OVERLOAD
+def saha_distribution_(gi : T_ARRAY, gk : T_ARRAY, chi : T_ARRAY, Ne : T_FLOAT, Te : T_FLOAT) -> T_ARRAY: ...
+@OVERLOAD
+def saha_distribution_(gi : T_INT, gk : T_INT, chi : T_FLOAT, Ne : T_ARRAY, Te : T_ARRAY) -> T_ARRAY: ...
 
 def saha_distribution_(gi : T_VEC_IA, gk : T_VEC_IA, 
                        chi : T_VEC_FA, Ne : T_VEC_IFA, 
@@ -261,6 +280,10 @@ def einsteinA_to_einsteinBs_hz_(Aji : T_UNION[T_ARRAY, T_FLOAT],
 
     return Bji, Bij
 
+@OVERLOAD
+def einsteinA_to_einsteinBs_cm_(Aji : T_FLOAT, w0 : T_FLOAT, gi : T_INT, gj : T_INT)->  T_TUPLE[T_FLOAT, T_FLOAT]: ...
+@OVERLOAD
+def einsteinA_to_einsteinBs_cm_(Aji : T_ARRAY, w0 : T_ARRAY, gi : T_ARRAY, gj : T_ARRAY)->  T_TUPLE[T_ARRAY, T_ARRAY]: ...
 
 def einsteinA_to_einsteinBs_cm_(Aji : T_UNION[T_ARRAY, T_FLOAT], 
        w0 : T_UNION[T_ARRAY, T_FLOAT], gi : T_UNION[T_ARRAY, T_INT],
@@ -419,6 +442,13 @@ def planck_hz_(F : T_UNION[T_ARRAY, T_FLOAT, T_INT],
         intensity = 2.0*CST.h_*F*F*F/CST.c_/CST.c_ / ( _numpy.exp( CST.h_*F_T/(CST.k_) ) - 1. )
 
     return intensity
+
+@OVERLOAD
+def planck_cm_(W : T_FLOAT, T : T_FLOAT) -> T_FLOAT: ...
+@OVERLOAD
+def planck_cm_(W : T_ARRAY, T : T_FLOAT) -> T_ARRAY: ...
+@OVERLOAD
+def planck_cm_(W : T_FLOAT, T : T_ARRAY) -> T_ARRAY: ...
 
 def planck_cm_(W : T_UNION[T_ARRAY, T_FLOAT, T_INT],
                T : T_UNION[T_ARRAY, T_FLOAT, T_INT]) -> T_UNION[T_ARRAY, T_FLOAT, T_INT]:

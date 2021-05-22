@@ -143,13 +143,13 @@ def _bf_R_rate_(Cont : T_ARRAY, Cont_mesh : T_ARRAY, Te : T_FLOAT,
 
     return Rik, Rki_stim, Rki_spon
 
-def _B_Jbar_with_(Line : T_ARRAY, Line_mesh_Coe : T_ARRAY,
-                  Line_mesh : T_ARRAY, Line_mesh_idxs : T_ARRAY, 
-                  Te : T_FLOAT, Vt : T_FLOAT, Vd : T_FLOAT, 
-                  Ne : T_FLOAT, Nh_I_ground : T_FLOAT, 
-                  Mass : T_FLOAT, atom_type : T_E_ATOM,
-                  backRad : T_ARRAY, Tr : T_FLOAT, use_Tr : T_BOOL,
-                  ) -> T_TUPLE[T_ARRAY,T_ARRAY,T_ARRAY,T_ARRAY,T_ARRAY]:
+def _B_Jbar_(Line : T_ARRAY, Line_mesh_Coe : T_ARRAY,
+             Line_mesh : T_ARRAY, Line_mesh_idxs : T_ARRAY, 
+             Te : T_FLOAT, Vt : T_FLOAT, Vd : T_FLOAT, 
+             Ne : T_FLOAT, Nh_I_ground : T_FLOAT, 
+             Mass : T_FLOAT, atom_type : T_E_ATOM,
+             backRad : T_ARRAY, Tr : T_FLOAT, use_Tr : T_BOOL,
+             ) -> T_TUPLE[T_ARRAY,T_ARRAY,T_ARRAY,T_ARRAY,T_ARRAY]:
 
     nLine = Line.shape[0]
 
@@ -164,10 +164,10 @@ def _B_Jbar_with_(Line : T_ARRAY, Line_mesh_Coe : T_ARRAY,
     for k in range(nLine):
 
         ## collisional broadening line width
-        gamma = Line["Gamma"][k]
+        gamma : T_FLOAT = Line["Gamma"][k]
         if atom_type == E_ATOM.HYDROGEN:
-            gamma += _Hydrogen.collisional_broadening_Res_and_Van_(Line["ni"], Line["nj"], Nh_I_ground, Te)
-            gamma += _Hydrogen.collisional_broadening_LinearStark_(Line["ni"], Line["nj"], Ne)
+            gamma += _Hydrogen.collisional_broadening_Res_and_Van_(Line["ni"][k], Line["nj"][k], Nh_I_ground, Te)
+            gamma += _Hydrogen.collisional_broadening_LinearStark_(Line["ni"][k], Line["nj"][k], Ne)
         
         Bij = Line['BIJ'][k]
         Bji = Line['BJI'][k]

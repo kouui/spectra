@@ -62,6 +62,12 @@ def dop_vel_to_shift_(p0 : T_VEC_IFA, v : T_VEC_IFA) -> T_VEC_IFA:
 
     return p0 * v / CST.c_
 
+@OVERLOAD
+def doppler_width_(p0 : T_FLOAT, Te : T_FLOAT, Vt : T_FLOAT, am : T_FLOAT) -> T_FLOAT: ...
+@OVERLOAD
+def doppler_width_(p0 : T_ARRAY, Te : T_FLOAT, Vt : T_FLOAT, am : T_FLOAT) -> T_ARRAY: ...
+@OVERLOAD
+def doppler_width_(p0 : T_FLOAT, Te : T_ARRAY, Vt : T_ARRAY, am : T_FLOAT) -> T_ARRAY: ...
 
 def doppler_width_(p0 : T_VEC_IFA, Te : T_VEC_IFA, 
                        Vt : T_VEC_IFA, am : T_FLOAT) -> T_VEC_IFA:
