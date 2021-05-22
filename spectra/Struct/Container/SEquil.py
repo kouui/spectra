@@ -7,12 +7,15 @@
 #    2021/05/18   u.k.   spectra-re
 #-------------------------------------------------------------------------------
 
-from ..ImportAll import *
+from ...ImportAll import *
 from dataclasses import dataclass as _dataclass
 
 
 @_dataclass(**STRUCT_KWGS_UNFROZEN)
 class SE_Container:
+    """Statistical Equilibrium result container for
+        - single spatial point
+    """
 
     n_SE                 : T_ARRAY # 1d (nLevel,), [/cm^3]
     n_LTE                : T_ARRAY # 1d (nLevel,), [/cm^3]
@@ -27,11 +30,13 @@ class SE_Container:
     Line_mesh_idxs       : T_ARRAY # 1d (sum_of_line_wavelength_mesh,), [-]
 
 
-    Jbar                 : T_ARRAY # 1d (nLine,), [erg/cm^2/Sr/cm/s]
+    Jbar                 : T_ARRAY # 1d (nLine,), [erg/cm^2/Sr/s]
 
 @_dataclass(**STRUCT_KWGS_UNFROZEN)
 class TranRates_Container:
-
+    """Statistical Equilibrium (Transition Rates) result container for
+        - single spatial point
+    """
     Rji_spon             : T_ARRAY # 1d (nLine+nCont), [/s]
     Rji_stim             : T_ARRAY # 1d (nLine+nCont), [/s]
     Rij                  : T_ARRAY # 1d (nLine+nCont), [/s]

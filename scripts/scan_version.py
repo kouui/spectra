@@ -37,7 +37,7 @@ def scan_version_(dir : str) -> None:
                 continue
             ## : pick "*.py" file
             if file.endswith(".py"):
-                get_file_version_(f"{cur_dir}/{file}")
+                get_file_version_( os.path.join(cur_dir, file) )
 
     return None
 

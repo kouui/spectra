@@ -45,13 +45,76 @@ from ...Struct import Atom as _Atom
 from ...Struct import Atmosphere as _Atmosphere
 from ...Struct import WavelengthMesh as _WavelengthMesh
 from ...Struct import Radiation as _Radiation
-from ...Struct import SEquil as _SEquil
+from ...Struct import Container as _Container
 
+def cal_SE_with_Nh_Te_(atom : _Atom.Atom, atmos : _Atmosphere.Atmosphere0D, 
+                       wMesh : _WavelengthMesh.Wavelength_Mesh, 
+                       radiation : _Radiation.Radiation,
+                       Nh_SE : T_UNION[T_ARRAY, None],
+                       ) -> T_TUPLE[_Container.SE_Container,_Container.TranRates_Container] :
+    
+    Nh       = atmos.Nh                  # [/cm^{3}] 
+    Ne0      = 1.E-4 * Nh                # [/cm^{3}]
+    if Nh_SE is None:
+        atmos.Ne = 0.5 * Nh              # [/cm^{3}]
+    else:
+        atmos.Ne = Ne0 + Nh * Nh_SE[0]   # [/cm^{3}]
+    
+    is_hydrogen = ( atom._atom_type ==  E_ATOM.HYDROGEN )
+    
+    while True:
+        SE_con, tran_rate_con = cal_SE_(atom, atmos, wMesh, radiation, Nh_SE)
+        
+        n_SE = SE_con.n_SE
+        
+        if is_hydrogen:
+            Ne_SE  = Ne0 + Nh * n_SE[-1]
+            Ne_new = 0.5 * ( Ne_SE + atmos.Ne )
+            if ( abs( Ne_new - atmos.Ne ) / atmos.Ne ) < 0.01:
+                break
+            else:
+                atmos.Ne = Ne_new
+        else:
+            break
+
+    return SE_con, tran_rate_con
+
+def cal_SE_with_Ne_Te_(atom : _Atom.Atom, atmos : _Atmosphere.Atmosphere0D, 
+                       wMesh : _WavelengthMesh.Wavelength_Mesh, 
+                       radiation : _Radiation.Radiation,
+                       Nh_SE : T_UNION[T_ARRAY, None],
+                       ) -> T_TUPLE[_Container.SE_Container,_Container.TranRates_Container] :
+    
+##    is_hydrogen = ( atom._atom_type ==  E_ATOM.HYDROGEN )
+
+## : this comment out block tries to compute Nh with iteration
+##   currently, we assume Nh does not change much in the iteration 
+##   (in collisional brodenning functions), so we fix Nh
+##   maybe we need this iteration when we include collisional with proton and H I
+##
+##    if (Nh_SE is None) & (~is_hydrogen) :
+##        raise ValueError("could not perform SE for non-hydrogen atom without given `Nh_SE`.")
+##        
+##    if (Nh_SE is None) & (is_hydrogen):
+##            atmos.Nh = 2 * atmos.Ne
+##    else:
+##        atmos.Nh  = atmos.Ne / ( 1.E-4 + Nh_SE[-1] )          # [cm^{-3}]
+
+    if (Nh_SE is None):
+        atmos.Nh = 2 * atmos.Ne
+    else:
+        atmos.Nh = atmos.Ne / ( 1.E-4 + Nh_SE[-1] )
+
+    SE_con, tran_rate_con = cal_SE_(atom, atmos, wMesh, radiation, Nh_SE)
+
+    return SE_con, tran_rate_con
+
+    
 def cal_SE_(atom : _Atom.Atom, atmos : _Atmosphere.Atmosphere0D, 
             wMesh : _WavelengthMesh.Wavelength_Mesh, 
             radiation : _Radiation.Radiation,
             Nh_SE : T_UNION[T_ARRAY, None],
-            ) -> T_TUPLE[_SEquil.SE_Container,_SEquil.TranRates_Container] :
+            ) -> T_TUPLE[_Container.SE_Container,_Container.TranRates_Container] :
     
     ## : extract variable from structs
 
@@ -103,7 +166,7 @@ def cal_SE_(atom : _Atom.Atom, atmos : _Atmosphere.Atmosphere0D,
 
     Nh_I_ground : T_FLOAT
     if Nh_SE is None:
-        Nh_I_ground = atmos.Nh # all hydrogen atoms are in its H I ground Level
+        Nh_I_ground = 0.5 * atmos.Nh # half hydrogen atoms are in its H I ground Level
     else:
         Nh_I_ground = atmos.Nh * Nh_SE[0] / Nh_SE.sum()
 
@@ -151,7 +214,7 @@ def cal_SE_(atom : _Atom.Atom, atmos : _Atmosphere.Atmosphere0D,
         Cji[:], Cij[:], Ne
         )
 
-    SE_con = _SEquil.SE_Container(
+    SE_con = _Container.SE_Container(
         n_SE = n_SE,
         n_LTE = n_LTE,
         nj_by_ni = nj_by_ni,
@@ -161,7 +224,7 @@ def cal_SE_(atom : _Atom.Atom, atmos : _Atmosphere.Atmosphere0D,
         Jbar = Jbar_all,
     )
 
-    tran_rate_con = _SEquil.TranRates_Container(
+    tran_rate_con = _Container.TranRates_Container(
         Rji_spon = Rji_spon[:],
         Rji_stim=Rji_stim[:],
         Rij=Rij[:],
