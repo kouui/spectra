@@ -29,6 +29,8 @@ from ...Atomic import LTELib as _LTELib
 from ...Atomic import PhotoIonize as _PhotoIonize
 from ...Atomic import Hydrogen as _Hydrogen
 from ...Atomic import BasicP as _BasicP
+from ...Atomic import Collision as _Collision
+from ...Atomic import SEsolver as _SEsolver
 from ...RadiativeTransfer import Profile as _Profile
 from ...Util import MeshUtil as _MeshUtil
 from ...Math import Integrate as _Integrate
@@ -191,6 +193,9 @@ def _B_Jbar_(Line : T_ARRAY, Line_mesh_Coe : T_ARRAY,
         elif proftype == E_ABSORPTION_PROFILE_TYPE.GAUSSIAN:
             absorb_prof_cm = _Profile.gaussian_(wm[:]) 
         
+        else:
+            raise ValueError("Only 'VOIGT' and 'GAUSSIAN' are valid E_ABSORPTION_PROFILE_TYPE")
+        
         absorb_prof_cm[:] = absorb_prof_cm[:] / dopWidth_cm # normalization
         ## -> could save to `absorb_prof_cm_all` here
         absorb_prof_cm_all[i_start:i_end] = absorb_prof_cm[:]
@@ -217,9 +222,104 @@ def _B_Jbar_(Line : T_ARRAY, Line_mesh_Coe : T_ARRAY,
 
     return Bij_Jbar, Bji_Jbar, wave_mesh_cm_shifted_all, absorb_prof_cm_all, Jbar_all 
 
-
+def _get_Cij_(Line : T_ARRAY, Cont : T_ARRAY, Te : T_FLOAT, atom_type : T_E_ATOM,
+              CE_Omega_table : T_ARRAY, CE_Te_table : T_ARRAY, CE_Coe : T_ARRAY, data_src_CE : T_E_ATOMIC_DATA_SOURCE,
+              CI_Omega_table : T_ARRAY, CI_Te_table : T_ARRAY, CI_Coe : T_ARRAY, data_src_CI : T_E_ATOMIC_DATA_SOURCE):
         
 
+    nLine = Line.shape[0]
+    nCont = Cont.shape[0]
+    Cij = _numpy.empty(nLine+nCont, dtype=T_FLOAT)
+
+    ## : for line transition
+    if data_src_CE == E_ATOMIC_DATA_SOURCE.EXPERIMENT:
+
+        for k in range(nLine):
+            omega = _Collision.interp_omega_(CE_Omega_table[k,:],Te,CE_Te_table[:],CE_Coe["f1"][k],CE_Coe["f2"][k])
+            Cij[k] = _Collision.CE_rate_coe_(omega,Te,CE_Coe["gi"][k],CE_Coe["dEij"][k])
+
+    elif data_src_CE == E_ATOMIC_DATA_SOURCE.CALCULATE:
+
+        if atom_type != E_ATOM.HYDROGEN:
+            raise ValueError("we don't have function to calculate collisional rate coefficient for non-hydrogen atom.")
+        
+        for k in range(nLine):
+            Cij[k] = _Hydrogen.CE_rate_coe_(Line["ni"][k],Line["nj"][k],Te)
+
+    else:
+
+        raise ValueError("only 'CALCULATE' and 'EXPERIMENT' are valid E_ATOMIC_DATA_SOURCE.")
+
+    if nCont > 0:
+
+        ## : for line transition
+        if data_src_CI == E_ATOMIC_DATA_SOURCE.EXPERIMENT:
+
+            for k in range(nCont):
+                omega = _Collision.interp_omega_(CI_Omega_table[k,:],Te,CI_Te_table[:],1.,CI_Coe["f2"][k])
+                Cij[k+nLine] = _Collision.CI_rate_coe_(omega,Te,CI_Coe["dEij"][k])
+
+        elif data_src_CI == E_ATOMIC_DATA_SOURCE.CALCULATE:
+
+            if atom_type != E_ATOM.HYDROGEN:
+                raise ValueError("we don't have function to calculate collisional rate coefficient for non-hydrogen atom.")
+
+            for k in range(nCont):
+                Cij[k+nLine] = _Hydrogen.CI_rate_coe_(Cont["ni"][k],Te)
+
+        else:
+
+            raise ValueError("only 'CALCULATE' and 'EXPERIMENT' are valid E_ATOMIC_DATA_SOURCE.")
+
+    else:
+
+        raise ValueError("currently, atomic model without continuum is not yet supported.")
+
+    return Cij
+
+def _solve_SE_(nLevel : T_INT, idxI : T_ARRAY, idxJ : T_ARRAY, 
+               Aji : T_ARRAY, Bji_Jbar : T_ARRAY, Bij_Jbar : T_ARRAY,
+               Rki_spon : T_ARRAY, Rki_stim : T_ARRAY, Rik : T_ARRAY,
+               Cji, Cij, Ne) -> T_ARRAY :
+
+    nTran = Cji.shape[0]
+    nLine = Aji.shape[0]
+    Rji_spon = _numpy.empty(nTran, dtype=T_FLOAT)
+    Rji_stim = _numpy.empty(nTran, dtype=T_FLOAT)
+    Rij      = _numpy.empty(nTran, dtype=T_FLOAT)
+
+    Rji_spon[:nLine] = Aji[:]
+    Rji_spon[nLine:] = Rki_spon[:]
+    Rji_stim[:nLine] = Bji_Jbar[:]
+    Rji_stim[nLine:] = Rki_stim[:]
+    Rij[:nLine]      = Bij_Jbar[:]
+    Rij[nLine:]      = Rij[:]
+
+    Cmat = _numpy.zeros((nLevel,nLevel), dtype=T_FLOAT)
+    _SEsolver.set_matrixC_(Cmat[:,:],Cji[:],Cij[:],idxI[:],idxJ,Ne)
+
+    Rmat = _numpy.zeros((nLevel,nLevel), dtype=T_FLOAT)
+    _SEsolver.set_matrixR_(Rmat[:,:], Rji_spon[:], Rji_stim[:], Rij[:], idxI[:], idxJ[:])
+
+    n_SE = _SEsolver.solve_SE_(Rmat, Cmat)
+
+    return n_SE
 
 
+#-----------------------------------------------------------------------------
+# high level functions with struct as function argument
+#-----------------------------------------------------------------------------
 
+
+#-------------------------------------------------------------------------------
+# numba optimization
+#-------------------------------------------------------------------------------
+
+if CFG._IS_JIT:
+
+    _nj_by_ni_To_ni_ = nb_njit(**NB_NJIT_KWGS) (_nj_by_ni_To_ni_)
+    _ni_nj_LTE_      = nb_njit(**NB_NJIT_KWGS) (_ni_nj_LTE_)
+    _bf_R_rate_      = nb_njit(**NB_NJIT_KWGS) (_bf_R_rate_)
+    _B_Jbar_         = nb_njit(**NB_NJIT_KWGS) (_B_Jbar_)
+    _get_Cij_        = nb_njit(**NB_NJIT_KWGS) (_get_Cij_)
+    _solve_SE_       = nb_njit(**NB_NJIT_KWGS) (_solve_SE_)

@@ -359,6 +359,12 @@ def einstein_A_coefficient_(ni : T_VEC_IA, nj : T_VEC_IA) -> T_VEC_FA:
 #-----------------------------------------------------------------------------
 # Collisional Excitation rate coefficient
 #-----------------------------------------------------------------------------
+@OVERLOAD
+def CE_rate_coe_(ni : T_INT, nj : T_INT, Te : T_FLOAT) -> T_FLOAT: ...
+@OVERLOAD
+def CE_rate_coe_(ni : T_INT, nj : T_INT, Te : T_ARRAY) -> T_ARRAY: ...
+@OVERLOAD
+def CE_rate_coe_(ni : T_ARRAY, nj : T_ARRAY, Te : T_FLOAT) -> T_ARRAY: ...
 
 def CE_rate_coe_(ni : T_VEC_IA, nj : T_VEC_IA, Te : T_VEC_IFA) -> T_VEC_FA:
     r"""
@@ -456,6 +462,13 @@ def CE_rate_coe_(ni : T_VEC_IA, nj : T_VEC_IA, Te : T_VEC_IFA) -> T_VEC_FA:
 #-----------------------------------------------------------------------------
 # Collisional Ionization rate coefficient
 #-----------------------------------------------------------------------------
+@OVERLOAD
+def CI_rate_coe_(ni : T_INT, Te : T_FLOAT) -> T_FLOAT: ...
+@OVERLOAD
+def CI_rate_coe_(ni : T_ARRAY, Te : T_FLOAT) -> T_ARRAY: ...
+@OVERLOAD
+def CI_rate_coe_(ni : T_INT, Te : T_ARRAY) -> T_ARRAY: ...
+
 def CI_rate_coe_(ni : T_VEC_IA, Te : T_VEC_IFA) -> T_VEC_FA:
     r"""
     Collisional ionization rate coefficient qik for the hydrogen atom

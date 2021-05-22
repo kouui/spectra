@@ -11,6 +11,11 @@ from ..ImportAll import *
 
 import numpy as _numpy
 
+@OVERLOAD
+def interp_omega_(table : T_ARRAY, Te : T_FLOAT, Te_table: T_ARRAY ,f1 : T_FLOAT, f2 : T_FLOAT) -> T_FLOAT: ...
+@OVERLOAD
+def interp_omega_(table : T_ARRAY, Te : T_ARRAY, Te_table: T_ARRAY ,f1 : T_FLOAT, f2 : T_FLOAT) -> T_ARRAY: ...
+
 def interp_omega_(table : T_ARRAY, Te : T_UNION[T_FLOAT,T_INT,T_ARRAY], Te_table: T_ARRAY ,
                  f1 : T_UNION[T_FLOAT,T_INT], f2 : T_UNION[T_FLOAT,T_INT]) -> T_UNION[T_FLOAT,T_ARRAY]:
     """given electron temperature, interpolate CE/CI coefficient
@@ -56,8 +61,14 @@ def Cij_to_Cji_(Cij : T_VEC_FA,  nj_by_ni_LTE : T_VEC_FA) -> T_VEC_FA:
 
     return Cji
 
-def CE_rate_coe_(omega : T_VEC_FA, Te : T_VEC_IFA, 
-                 gi : T_VEC_IA, dEij : T_VEC_FA) -> T_VEC_FA:
+@OVERLOAD
+def CE_rate_coe_(omega : T_FLOAT, Te : T_FLOAT, gi : T_INT, dEij : T_FLOAT) -> T_FLOAT: ...
+@OVERLOAD
+def CE_rate_coe_(omega : T_FLOAT, Te : T_ARRAY, gi : T_INT, dEij : T_FLOAT) -> T_ARRAY: ...
+@OVERLOAD
+def CE_rate_coe_(omega : T_ARRAY, Te : T_FLOAT, gi : T_ARRAY, dEij : T_ARRAY) -> T_ARRAY: ...
+
+def CE_rate_coe_(omega : T_VEC_FA, Te : T_VEC_IFA, gi : T_VEC_IA, dEij : T_VEC_FA) -> T_VEC_FA:
     """[summary]
 
     Parameters
@@ -84,14 +95,21 @@ def CE_rate_coe_(omega : T_VEC_FA, Te : T_VEC_IFA,
 
     return CEij
 
-def CI_rate_coe_(omega : T_VEC_FA, Te : T_VEC_IA, dEik : T_VEC_FA) -> T_VEC_FA:
+@OVERLOAD
+def CI_rate_coe_(omega : T_FLOAT, Te : T_FLOAT, dEik : T_FLOAT) -> T_FLOAT: ...
+@OVERLOAD
+def CI_rate_coe_(omega : T_FLOAT, Te : T_ARRAY, dEik : T_FLOAT) -> T_ARRAY: ...
+@OVERLOAD
+def CI_rate_coe_(omega : T_ARRAY, Te : T_FLOAT, dEik : T_ARRAY) -> T_ARRAY: ...
+
+def CI_rate_coe_(omega : T_VEC_FA, Te : T_VEC_FA, dEik : T_VEC_FA) -> T_VEC_FA:
     """[summary]
 
     Parameters
     ----------
     omega : T_VEC_FA
         the collisional strength (?) we interpolate from data
-    Te : T_VEC_IA
+    Te : T_VEC_FA
         electron temperature, [:math:`K`]
     dEik : T_VEC_FA
         ionization energy, [:math:`erg`]
