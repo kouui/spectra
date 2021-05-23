@@ -28,7 +28,7 @@ class Wavelength_Mesh:
 
     Line_Coe        : T_ARRAY # struct
     
-    ##: we need Line_mesh_share to deal with non-gray atmoshere
+    ##: we need Line_mesh_share to deal with non-uniform atmoshere
     Line_mesh_share      : T_ARRAY # 1d,
     Line_mesh_share_idxs : T_ARRAY # 2d,   (nLine, 2)
 

@@ -110,6 +110,9 @@ def cal_SE_with_Ne_Te_(atom : _Atom.Atom, atmos : _Atmosphere.Atmosphere0D,
 
     SE_con, tran_rate_con = cal_SE_(atom, atmos, wMesh, radiation, Nh_SE)
 
+    if is_hydrogen := ( atom._atom_type ==  E_ATOM.HYDROGEN ):
+        atmos.Nh = atmos.Ne / ( 1.E-4 + SE_con.n_SE[-1] )
+
     return SE_con, tran_rate_con
 
     

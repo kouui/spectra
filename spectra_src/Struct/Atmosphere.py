@@ -26,7 +26,7 @@ class Atmosphere0D:
     Vt : T_FLOAT
 
     ndim : T_INT     = 0
-    is_gray : T_BOOL = True
+    is_uniform : T_BOOL = True
 
     Tr : T_FLOAT     = 6.E3
     use_Tr : T_BOOL  = False
@@ -38,13 +38,18 @@ class Atmosphere0D:
 @_dataclass(**STRUCT_KWGS_UNFROZEN)
 class AtmosphereC1D:
 
-    Nh : T_ARRAY
+    Nh : T_ARRAY 
     Ne : T_ARRAY
     Te : T_ARRAY
     Vd : T_ARRAY
     Vt : T_ARRAY
 
-    is_gray : T_BOOL
+    tau5 : T_FLOAT          # optical depth at 500nm
+
+    height : T_FLOAT        # height of the atmosphere above photosphere
+    depth  : T_FLOAT        # depth of the atmosphere in line-of-sight
+
+    is_uniform : T_BOOL
     ndim : T_INT     = 1
     
     Tr : T_FLOAT     = 6.E3
@@ -53,3 +58,4 @@ class AtmosphereC1D:
     doppler_shift_continuum : T_BOOL = False
 
     _coord_type : T_E_ATMOSPHERE_COORDINATE_TYPE = E_ATMOSPHERE_COORDINATE_TYPE.CARTESIAN
+
