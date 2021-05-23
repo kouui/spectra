@@ -47,9 +47,9 @@ def interpolate_PI_intensity_(backRad : T_ARRAY, continuum_mesh : T_ARRAY) -> T_
     #_fill_value = (_backRad[1,0],_backRad[1,-1])
     #_bsp_obj = interp1d(x=_backRad[0,:], y=_backRad[1,:], bounds_error=False, fill_value=_fill_value)
 
-    intensity_mesh = _numpy.empty(continuum_mesh.shape, dtype=T_FLOAT)
+    intensity_mesh = _numpy.empty(continuum_mesh.shape, dtype=DT_NB_FLOAT)
     intensity_mesh_1d = intensity_mesh.reshape(-1)
-    intensity_mesh_1d[:] = _numpy.interp(continuum_mesh[:,:].reshape(-1), backRad[0,:], backRad[1,:])
+    intensity_mesh_1d[:] = _numpy.interp(continuum_mesh[:,:].copy().reshape(-1), backRad[0,:], backRad[1,:])
     #for k in range(continuum_mesh.shape[0]):
         ## scipy interpolation
         #_intensity_mesh[k,:] = splev(_continuum_mesh[k,:], _bsp_obj, ext=3)
@@ -87,7 +87,7 @@ def interpolate_PI_alpha_(alpha_table : T_ARRAY, alpha_table_idxs : T_ARRAY,
         interpolated photoionization cross section.
     """
 
-    alpha_mesh = _numpy.empty(continuum_mesh.shape, dtype=T_FLOAT)
+    alpha_mesh = _numpy.empty(continuum_mesh.shape, dtype=DT_NB_FLOAT)
     for k in range(continuum_mesh.shape[0]):
         
         i, j = alpha_table_idxs[k,:]
@@ -118,7 +118,7 @@ def bound_free_radiative_transition_coefficient_(
                 Te : T_UNION[T_FLOAT,T_INT], 
                 nk_by_ni_LTE : T_FLOAT
                 ) -> T_TUPLE[T_FLOAT, T_FLOAT, T_FLOAT]:
-    """Given wavelength mesh, mean intensity (as function of wavelength),
+    r"""Given wavelength mesh, mean intensity (as function of wavelength),
     photoionization cross section, compute
 
     - radiative ionization rate,
@@ -224,3 +224,4 @@ def bound_free_radiative_transition_coefficient_(
 if CFG._IS_JIT:
 
     bound_free_radiative_transition_coefficient_ = nb_njit(**NB_NJIT_KWGS) (bound_free_radiative_transition_coefficient_)
+    interpolate_PI_intensity_ = nb_njit(**NB_NJIT_KWGS) (interpolate_PI_intensity_)

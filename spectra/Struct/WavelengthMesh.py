@@ -55,7 +55,7 @@ def init_Wave_Mesh_(Cont : T_ARRAY, Line : T_ARRAY, RL_Coe : T_ARRAY) -> Wavelen
                           ('nLambda', T_INT),     #: number of meaningful wavelength mesh point
                           ])
     nCont = Cont.shape[0]
-    Cont_mesh = _numpy.zeros((nCont, _N_CONT_MESH), dtype=T_FLOAT)
+    Cont_mesh = _numpy.zeros((nCont, _N_CONT_MESH), dtype=DT_NB_FLOAT)
     Cont_Coe  = _numpy.empty(nCont, dtype=dtype)
     if nCont > 0:  # has_continuum == True
 
@@ -94,9 +94,9 @@ def init_Wave_Mesh_(Cont : T_ARRAY, Line : T_ARRAY, RL_Coe : T_ARRAY) -> Wavelen
                           ('qwing', T_FLOAT),
                           ('nLambda', T_INT),     #: number of meaningful wavelength mesh point
                           ])
-    Line_mesh        = _numpy.empty(n_total_line_mesh, dtype=T_FLOAT)
-    Line_absorb_prof = _numpy.empty(n_total_line_mesh, dtype=T_FLOAT)  # not defined
-    Line_mesh_idxs   = _numpy.empty((nLine, 2), dtype=T_INT)
+    Line_mesh        = _numpy.empty(n_total_line_mesh, dtype=DT_NB_FLOAT)
+    Line_absorb_prof = _numpy.empty(n_total_line_mesh, dtype=DT_NB_FLOAT)  # not defined
+    Line_mesh_idxs   = _numpy.empty((nLine, 2), dtype=DT_NB_INT)
     Line_Coe         = _numpy.empty(nLine, dtype=dtype)
     nLambda : T_INT
     qcore : T_FLOAT
@@ -142,8 +142,8 @@ def init_Wave_Mesh_(Cont : T_ARRAY, Line : T_ARRAY, RL_Coe : T_ARRAY) -> Wavelen
         Line_Coe  = Line_Coe,
         Line_absorb_prof = Line_absorb_prof,
         Line_mesh_idxs = Line_mesh_idxs,
-        Line_mesh_share = _numpy.empty(0, dtype=T_FLOAT),
-        Line_mesh_share_idxs = _numpy.empty((nLine,2), dtype=T_INT)
+        Line_mesh_share = _numpy.empty(0, dtype=DT_NB_FLOAT),
+        Line_mesh_share_idxs = _numpy.empty((nLine,2), dtype=DT_NB_INT)
     )
 
     return wavelength_mesh

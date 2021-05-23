@@ -20,9 +20,9 @@ import numpy as _numpy
 #-------------------------------------------------------------------------------
 
 _A53 = _numpy.array([-0.57721566,  0.99999193, -0.24991055,
-                0.05519968, -0.00976004,  0.00107857], dtype=T_FLOAT)
-_A56 = _numpy.array([8.5733287401, 18.0590169730, 8.6347608925,  0.2677737343],dtype=T_FLOAT)
-_B56 = _numpy.array([9.5733223454, 25.6329561486,21.0996530827,  3.9584969228],dtype=T_FLOAT)
+                0.05519968, -0.00976004,  0.00107857], dtype=DT_NB_FLOAT)
+_A56 = _numpy.array([8.5733287401, 18.0590169730, 8.6347608925,  0.2677737343],dtype=DT_NB_FLOAT)
+_B56 = _numpy.array([9.5733223454, 25.6329561486,21.0996530827,  3.9584969228],dtype=DT_NB_FLOAT)
 
 def E0_(x : T_VEC_IFA) -> T_VEC_FA:
     """E_0(x)
@@ -68,7 +68,6 @@ def E1_(x : T_VEC_IFA) -> T_VEC_FA:
 
     """
     if x <= 0. or x> 80.0:
-        print(x)
         raise ValueError("argument x should be a positive number smaller than 80.0")
     
 

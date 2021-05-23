@@ -47,9 +47,9 @@ def SE_to_slab_0D_(atom : _Atom.Atom, atmos : _Atmosphere.Atmosphere0D,
 
     ## 4. compute optical depth given the thichness of the slab
     ## 5. compute the line profile
-    arr_w0        = _numpy.empty(nLine, dtype=T_FLOAT)
-    arr_tau_max   = _numpy.empty(nLine, dtype=T_FLOAT)
-    arr_Ibar      = _numpy.empty(nLine, dtype=T_FLOAT)
+    arr_w0        = _numpy.empty(nLine, dtype=DT_NB_FLOAT)
+    arr_tau_max   = _numpy.empty(nLine, dtype=DT_NB_FLOAT)
+    arr_Ibar      = _numpy.empty(nLine, dtype=DT_NB_FLOAT)
     arr_prof_1D   = _numpy.empty_like( absorb_prof_1d )
     #arr_wl_1D     = _numpy.empty_like( absorb_prof_1d )
     for k in range(0,nLine):

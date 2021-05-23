@@ -32,12 +32,13 @@ import numpy as _numpy
 import os
 
 def init_Radiation_(atmos : T_UNION[_Atmosphere.Atmosphere0D,_Atmosphere.AtmosphereC1D],
-                    wMesh : _WavelengthMesh.Wavelength_Mesh) -> Radiation:
+                    wMesh : _WavelengthMesh.Wavelength_Mesh, intensity_fac : T_FLOAT) -> Radiation:
 
     root=CFG._ROOT_DIR
 
     backRad = _numpy.load(  os.path.join(root,"data/intensity/atlas/QS/atlas_QS.npy") )
     backRad[0,:] *= 1E-8
+    backRad[1,:] *= 2.5*intensity_fac
     
     Cont_mesh = wMesh.Cont_mesh
     if atmos.use_Tr:

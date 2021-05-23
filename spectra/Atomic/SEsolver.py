@@ -24,7 +24,7 @@ def set_matrixC_(
          idxI : T_ARRAY, 
          idxJ : T_ARRAY, 
          Ne   : T_UNION[T_FLOAT, T_INT]):
-    """
+    r"""
     Compute the collisional rate matrix.
 
     Parameters
@@ -165,7 +165,7 @@ def solve_SE_(Rmat : T_ARRAY, Cmat : T_ARRAY) -> T_ARRAY:
 
     nLevel = Rmat.shape[0]
     A = Cmat[:,:] + Rmat[:,:]
-    b = _numpy.zeros(nLevel, dtype=T_FLOAT)
+    b = _numpy.zeros(nLevel, dtype=DT_NB_FLOAT)
 
     #-------------------------------------------------------------
     # diagnal components

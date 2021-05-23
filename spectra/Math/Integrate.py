@@ -43,7 +43,7 @@ def trapze_(y : T_ARRAY, x : T_ARRAY) -> T_FLOAT:
     """
 
     n = x.size
-    dx = _numpy.empty(n, dtype=T_FLOAT)
+    dx = _numpy.empty(n, dtype=DT_NB_FLOAT)
     for i in range(1, n-1):
         dx[i] = 0.5 * (x[i+1]-x[i-1])
     dx[0] = 0.5 * (x[1]-x[0])

@@ -63,6 +63,7 @@ def cal_SE_with_Nh_Te_(atom : _Atom.Atom, atmos : _Atmosphere.Atmosphere0D,
     is_hydrogen = ( atom._atom_type ==  E_ATOM.HYDROGEN )
     
     while True:
+        
         SE_con, tran_rate_con = cal_SE_(atom, atmos, wMesh, radiation, Nh_SE)
         
         n_SE = SE_con.n_SE
@@ -70,7 +71,9 @@ def cal_SE_with_Nh_Te_(atom : _Atom.Atom, atmos : _Atmosphere.Atmosphere0D,
         if is_hydrogen:
             Ne_SE  = Ne0 + Nh * n_SE[-1]
             Ne_new = 0.5 * ( Ne_SE + atmos.Ne )
+            
             if ( abs( Ne_new - atmos.Ne ) / atmos.Ne ) < 0.01:
+                atmos.Ne = Ne_new
                 break
             else:
                 atmos.Ne = Ne_new
@@ -173,8 +176,8 @@ def cal_SE_(atom : _Atom.Atom, atmos : _Atmosphere.Atmosphere0D,
     Aji             = Line["AJI"][:]
 
     ## : append idxI, idxJ
-    idxI = _numpy.empty(nLine+nCont, dtype=T_INT)
-    idxJ = _numpy.empty(nLine+nCont, dtype=T_INT)
+    idxI = _numpy.empty(nLine+nCont, dtype=DT_NB_INT)
+    idxJ = _numpy.empty(nLine+nCont, dtype=DT_NB_INT)
     idxI[:nLine] = Line["idxI"][:]
     idxJ[:nLine] = Line["idxJ"][:]
     idxI[nLine:] = Cont["idxI"][:]
@@ -252,9 +255,9 @@ def _ni_nj_LTE_(Level : T_ARRAY, Line : T_ARRAY, Cont : T_ARRAY,
     nTran  = nLine + nCont
 
     ## : initilize _nj_by_ni
-    nj_by_ni = _numpy.empty( nTran, dtype=T_FLOAT )
-    idxI     = _numpy.empty( nTran, dtype=T_INT )
-    idxJ     = _numpy.empty( nTran, dtype=T_INT )
+    nj_by_ni = _numpy.empty( nTran, dtype=DT_NB_FLOAT )
+    idxI     = _numpy.empty( nTran, dtype=DT_NB_INT )
+    idxJ     = _numpy.empty( nTran, dtype=DT_NB_INT )
 
     ## : for line transitions
     gi = Line['gi'][:]
@@ -288,7 +291,7 @@ def _nj_by_ni_To_ni_(nj_by_ni : T_ARRAY, idxI : T_ARRAY, idxJ : T_ARRAY, isGroun
     nLevel = isGround.shape[0]
     nTran  = idxI.shape[0]
 
-    ni = _numpy.empty(nLevel, dtype=T_FLOAT)
+    ni = _numpy.empty(nLevel, dtype=DT_NB_FLOAT)
     ni[0] = 1.
 
     # loop through continuum transition first, 
@@ -330,9 +333,9 @@ def _bf_R_rate_(Cont : T_ARRAY, Cont_mesh : T_ARRAY, Te : T_FLOAT,
     #-------------------------------------------------------------------------
     nCont = Cont.shape[0]
 
-    Rik      = _numpy.empty( nCont, dtype=T_FLOAT )
-    Rki_stim = _numpy.empty( nCont, dtype=T_FLOAT )
-    Rki_spon = _numpy.empty( nCont, dtype=T_FLOAT )
+    Rik      = _numpy.empty( nCont, dtype=DT_NB_FLOAT )
+    Rki_stim = _numpy.empty( nCont, dtype=DT_NB_FLOAT )
+    Rki_spon = _numpy.empty( nCont, dtype=DT_NB_FLOAT )
     ## loop over continuum transition
     for kL in range(nCont):
         res = _PhotoIonize.bound_free_radiative_transition_coefficient_(
@@ -359,10 +362,10 @@ def _B_Jbar_(Line : T_ARRAY, Line_mesh_Coe : T_ARRAY,
 
     wave_mesh_cm_shifted_all : T_ARRAY = _numpy.empty_like(Line_mesh)
     absorb_prof_cm_all       : T_ARRAY = _numpy.empty_like(Line_mesh)
-    Jbar_all                 : T_ARRAY = _numpy.empty(nLine, dtype=T_FLOAT)
+    Jbar_all                 : T_ARRAY = _numpy.empty(nLine, dtype=DT_NB_FLOAT)
 
-    Bji_Jbar = _numpy.empty( nLine, dtype=T_FLOAT )
-    Bij_Jbar = _numpy.empty( nLine, dtype=T_FLOAT )
+    Bji_Jbar = _numpy.empty( nLine, dtype=DT_NB_FLOAT )
+    Bij_Jbar = _numpy.empty( nLine, dtype=DT_NB_FLOAT )
 
     absorb_prof_cm : T_ARRAY
     for k in range(nLine):
@@ -431,7 +434,7 @@ def _get_Cij_(Line : T_ARRAY, Cont : T_ARRAY, Te : T_FLOAT, atom_type : T_E_ATOM
 
     nLine = Line.shape[0]
     nCont = Cont.shape[0]
-    Cij = _numpy.empty(nLine+nCont, dtype=T_FLOAT)
+    Cij = _numpy.empty(nLine+nCont, dtype=DT_NB_FLOAT)
 
     ## : for line transition
     if data_src_CE == E_ATOMIC_DATA_SOURCE.EXPERIMENT:
@@ -485,9 +488,9 @@ def _make_Rji_Rij_(Aji : T_ARRAY, Bji_Jbar : T_ARRAY, Bij_Jbar : T_ARRAY,
     nLine = Aji.shape[0]
     nCont = Rik.shape[0]
     nTran = nLine + nCont
-    Rji_spon = _numpy.empty(nTran, dtype=T_FLOAT)
-    Rji_stim = _numpy.empty(nTran, dtype=T_FLOAT)
-    Rij      = _numpy.empty(nTran, dtype=T_FLOAT)
+    Rji_spon = _numpy.empty(nTran, dtype=DT_NB_FLOAT)
+    Rji_stim = _numpy.empty(nTran, dtype=DT_NB_FLOAT)
+    Rij      = _numpy.empty(nTran, dtype=DT_NB_FLOAT)
 
     Rji_spon[:nLine] = Aji[:]
     Rji_spon[nLine:] = Rki_spon[:]
@@ -502,10 +505,10 @@ def _solve_SE_(nLevel : T_INT, idxI : T_ARRAY, idxJ : T_ARRAY,
                Rji_spon : T_ARRAY, Rji_stim : T_ARRAY, Rij : T_ARRAY,
                Cji : T_ARRAY, Cij : T_ARRAY, Ne : T_FLOAT) -> T_ARRAY :
 
-    Cmat = _numpy.zeros((nLevel,nLevel), dtype=T_FLOAT)
+    Cmat = _numpy.zeros((nLevel,nLevel), dtype=DT_NB_FLOAT)
     _SEsolver.set_matrixC_(Cmat[:,:],Cji[:],Cij[:],idxI[:],idxJ,Ne)
 
-    Rmat = _numpy.zeros((nLevel,nLevel), dtype=T_FLOAT)
+    Rmat = _numpy.zeros((nLevel,nLevel), dtype=DT_NB_FLOAT)
     _SEsolver.set_matrixR_(Rmat[:,:], Rji_spon[:], Rji_stim[:], Rij[:], idxI[:], idxJ[:])
 
     n_SE = _SEsolver.solve_SE_(Rmat, Cmat)

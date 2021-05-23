@@ -27,7 +27,7 @@ def boltzmann_distribution_(gi : T_INT, gj : T_INT, Eji : T_FLOAT, Te : T_ARRAY)
 
 def boltzmann_distribution_(gi : T_VEC_IA, gj : T_VEC_IA, 
                             Eji : T_VEC_FA, Te : T_VEC_IFA) -> T_VEC_FA:
-    """calculate the population ratio between upper level j and lower level i under LTE.
+    r"""calculate the population ratio between upper level j and lower level i under LTE.
 
     Parameters
     ----------
@@ -127,7 +127,7 @@ def LTE_ratio_Line_(g : T_ARRAY, idxI : T_ARRAY, idxJ : T_ARRAY,
     """
     nLine = w0.size
     hc = CST.h_ * CST.c_
-    nRatio = _numpy.ones(nLine, dtype=T_FLOAT)
+    nRatio = _numpy.ones(nLine, dtype=DT_NB_FLOAT)
     for k in range(nLine):
         gi = g[ idxI[k] ]
         gj = g[ idxJ[k] ]
@@ -170,7 +170,7 @@ def LTE_ratio_Cont_(g : T_ARRAY, idxI : T_ARRAY, idxJ : T_ARRAY,
     """
     nLine = w0.size
     hc = CST.h_ * CST.c_
-    nRatio = _numpy.ones(nLine, dtype=T_FLOAT)
+    nRatio = _numpy.ones(nLine, dtype=DT_NB_FLOAT)
     for k in range(nLine):
         gi = g[ idxI[k] ]
         gk = g[ idxJ[k] ]
@@ -288,7 +288,7 @@ def einsteinA_to_einsteinBs_cm_(Aji : T_ARRAY, w0 : T_ARRAY, gi : T_ARRAY, gj : 
 def einsteinA_to_einsteinBs_cm_(Aji : T_UNION[T_ARRAY, T_FLOAT], 
        w0 : T_UNION[T_ARRAY, T_FLOAT], gi : T_UNION[T_ARRAY, T_INT],
        gj : T_UNION[T_ARRAY, T_INT])->  T_UNION[ T_TUPLE[T_ARRAY,T_ARRAY], T_TUPLE[T_FLOAT, T_FLOAT] ]:
-    """
+    r"""
 
     given Einstein A coefficient Aij,
     calculate Einstein B coefficients Bij and Bji.
@@ -394,7 +394,7 @@ def Bji_to_Bij_(Bji : T_UNION[T_ARRAY, T_FLOAT],
 _removals.remove
 def planck_hz_(F : T_UNION[T_ARRAY, T_FLOAT, T_INT],
                T : T_UNION[T_ARRAY, T_FLOAT, T_INT]) -> T_UNION[T_ARRAY, T_FLOAT, T_INT]:
-    """
+    r"""
     given frequency and temperature,
     calculate the frequency based planck function.
 
@@ -452,7 +452,7 @@ def planck_cm_(W : T_FLOAT, T : T_ARRAY) -> T_ARRAY: ...
 
 def planck_cm_(W : T_UNION[T_ARRAY, T_FLOAT, T_INT],
                T : T_UNION[T_ARRAY, T_FLOAT, T_INT]) -> T_UNION[T_ARRAY, T_FLOAT, T_INT]:
-    """
+    r"""
     given wavelength and temperature,
     calculate the wavelength based planck function.
 
@@ -568,7 +568,7 @@ _UFUNC_COEFFICIENT_TABLE : T_DICT[ T_STR, T_TUPLE[T_FLOAT, ...] ] = {
 }
 
 def Ufunc_(elm : T_STR, T : T_UNION[T_ARRAY,T_FLOAT,T_INT]) -> T_UNION[T_ARRAY,T_FLOAT]:
-    """
+    r"""
     partition function of neutral hydrogen
 
 

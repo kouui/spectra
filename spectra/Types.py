@@ -70,6 +70,8 @@ T_E_ATMOSPHERE_COORDINATE_TYPE = T_LITERAL[E_ATMOSPHERE_COORDINATE_TYPE.POINT,E_
 # numba types
 #-------------------------------------------------------------------------------
 
+DT_NB_FLOAT = "float64"
+DT_NB_INT   = "int64"
 #import numba.types as nb_types     # type: ignore
 #
 #T_NB_FLOAT1D = nb_types.float64[:]         # type: ignore
@@ -105,7 +107,7 @@ T_E_ATMOSPHERE_COORDINATE_TYPE = T_LITERAL[E_ATMOSPHERE_COORDINATE_TYPE.POINT,E_
 #     value_type=T_NB_FLOAT1D,
 # )
 # 
-# b['posx'] = numpy.asarray([1, 0.5, 2], dtype=T_FLOAT)
-# b['posy'] = numpy.asarray([1.5, 3.5, 2], dtype=T_FLOAT)
-# b['velx'] = numpy.asarray([0.5, 0, 0.7], dtype=T_FLOAT)
-# b['vely'] = numpy.asarray([0.2, -0.2, 0.1], dtype=T_FLOAT)
+# b['posx'] = numpy.asarray([1, 0.5, 2], dtype=DT_NB_FLOAT)
+# b['posy'] = numpy.asarray([1.5, 3.5, 2], dtype=DT_NB_FLOAT)
+# b['velx'] = numpy.asarray([0.5, 0, 0.7], dtype=DT_NB_FLOAT)
+# b['vely'] = numpy.asarray([0.2, -0.2, 0.1], dtype=DT_NB_FLOAT)

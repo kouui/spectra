@@ -98,7 +98,7 @@ def make_full_line_mesh_(nLambda : T_INT, qcore : T_FLOAT = 2.5, qwing : T_FLOAT
     - change qcore, you change how dense in line core.
     """
 
-    mesh = _numpy.empty(nLambda, dtype=T_FLOAT)
+    mesh = _numpy.empty(nLambda, dtype=DT_NB_FLOAT)
     nLmid = nLambda // 2
     make_half_line_mesh_(nLambda, qcore, qwing, mesh[nLmid:])
     mesh[:nLmid] = -1. * mesh[nLmid+1:][::-1]
@@ -124,7 +124,7 @@ def make_continuum_mesh_(nLambda : T_INT) -> T_ARRAY:
         Output mesh distribution.
 
     """
-    mesh = _numpy.empty(nLambda, dtype=T_FLOAT)
+    mesh = _numpy.empty(nLambda, dtype=DT_NB_FLOAT)
     for j in range(1, nLambda+1):
         qj = ( nLambda + 1.- j ) / nLambda
         mesh[j-1] = qj**(0.5)
@@ -161,6 +161,29 @@ def half_to_full_(arr_half : T_ARRAY, isMinus : T_BOOL = False) -> T_ARRAY:
     _arr_full[:_nLmid] = fac * arr_half[::-1]
 
     return _arr_full
+
+def array_from_1D_(arr_1D : T_ARRAY, mesh_idxs : T_ARRAY, k : T_INT) -> T_ARRAY :
+    """extract target sub-array from a 1D array containing sub-arrays with different size
+
+    Parameters
+    ----------
+    arr_1D : T_ARRAY
+        the 1D array containing sub-arrays with different size
+    mesh_idxs : T_ARRAY, 2d, (nLine, 2)
+        start and end index of each sub-array
+    k : T_INT
+        the index of line you want to extract
+
+    Returns
+    -------
+    T_ARRAY
+        target sub-array
+    """
+    i1 : T_INT = mesh_idxs[k,:]
+    i2 : T_INT = mesh_idxs[k,:]
+
+    return arr_1D[i1:i2].copy()
+
 
 #-----------------------------------------------------------------------------
 # numba optimization

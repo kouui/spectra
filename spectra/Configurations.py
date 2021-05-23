@@ -23,11 +23,11 @@ _ROOT_DIR : T_STR = os.path.abspath( os.path.join( os.path.dirname(__file__), ".
 
 _IS_JIT       : T_BOOL = False
 
-_IS_NOGIL     : T_BOOL = False
+_IS_NOGIL     : T_BOOL = True
 
 _IS_PARALLEL  : T_BOOL = False
 
-_IS_CACHE     : T_BOOL = False
+_IS_CACHE     : T_BOOL = True
 
 _IS_FASTMATH  : T_BOOL = False
 

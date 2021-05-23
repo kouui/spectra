@@ -736,8 +736,8 @@ def make_Atom_CECI_(path_electron : T_UNION[T_STR, None], tran_type : T_STR,
     if path_electron is None:
         
         nTe = 0        
-        Te_table    = _numpy.zeros(nTe, dtype=T_FLOAT)
-        Omega_table = _numpy.zeros((n_transition, nTe), dtype=T_FLOAT)
+        Te_table    = _numpy.zeros(nTe, dtype=DT_NB_FLOAT)
+        Omega_table = _numpy.zeros((n_transition, nTe), dtype=DT_NB_FLOAT)
         Coe         = _numpy.zeros(n_transition, dtype=dtype)
         Coe["f1"][:] = 1
         Coe["f2"][:] = 1
@@ -754,8 +754,8 @@ def make_Atom_CECI_(path_electron : T_UNION[T_STR, None], tran_type : T_STR,
         elif tran_type == "CI":
             rs, nTe, Te = read_CI_temperature_(fLines)
 
-        Te_table    = _numpy.array(Te, dtype=T_FLOAT)
-        Omega_table = _numpy.zeros((n_transition, nTe), dtype=T_FLOAT)
+        Te_table    = _numpy.array(Te, dtype=DT_NB_FLOAT)
+        Omega_table = _numpy.zeros((n_transition, nTe), dtype=DT_NB_FLOAT)
         Coe         = _numpy.zeros(n_transition, dtype=dtype)
 
         if tran_type == "CE":
@@ -839,17 +839,17 @@ def make_Atom_PI_(path : T_UNION[T_STR, None], Level : T_ARRAY, Cont : T_ARRAY, 
     ## no continuum
     if nCont == 0:
         data_source_PI = E_ATOMIC_DATA_SOURCE.CALCULATE
-        alpha_table = _numpy.empty((2,0), dtype=T_FLOAT)
-        alpha_table_idxs = _numpy.empty( (nCont,2), dtype=T_INT )
-        alpha_interp = _numpy.empty( (nCont,0), dtype=T_INT )
+        alpha_table = _numpy.empty((2,0), dtype=DT_NB_FLOAT)
+        alpha_table_idxs = _numpy.empty( (nCont,2), dtype=DT_NB_INT )
+        alpha_interp = _numpy.empty( (nCont,0), dtype=DT_NB_INT )
         
         return alpha_table, alpha_table_idxs, Coe, alpha_interp, data_source_PI
 
     
     if path is None:
         data_source_PI = E_ATOMIC_DATA_SOURCE.CALCULATE
-        alpha_table = _numpy.empty((2,0), dtype=T_FLOAT)
-        alpha_table_idxs = _numpy.empty( (nCont,2), dtype=T_INT )
+        alpha_table = _numpy.empty((2,0), dtype=DT_NB_FLOAT)
+        alpha_table_idxs = _numpy.empty( (nCont,2), dtype=DT_NB_INT )
 
         Coe["idxI"][:] = Cont["idxI"][:]
         Coe["idxJ"][:] = Cont["idxJ"][:]
@@ -886,8 +886,8 @@ def make_Atom_PI_(path : T_UNION[T_STR, None], Level : T_ARRAY, Cont : T_ARRAY, 
         for i, key in enumerate(sorted_keys):
             n_total_mesh_length += alpha_table_dict[key].shape[1]
 
-        alpha_table = _numpy.empty((2,n_total_mesh_length), dtype=T_FLOAT)
-        alpha_table_idxs = _numpy.empty( (nCont,2), dtype=T_INT )
+        alpha_table = _numpy.empty((2,n_total_mesh_length), dtype=DT_NB_FLOAT)
+        alpha_table_idxs = _numpy.empty( (nCont,2), dtype=DT_NB_INT )
         bias = 0
         for i, key in enumerate(sorted_keys):
             arr2d : T_ARRAY = alpha_table_dict[key]

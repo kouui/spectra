@@ -517,7 +517,7 @@ def CI_rate_coe_(ni : T_VEC_IA, Te : T_VEC_IFA) -> T_VEC_FA:
     kT = CST.k_ * Te
 
     # Eq(20)
-    i_arr = _numpy.array([0,1,2],dtype=T_INT)
+    i_arr = _numpy.array([0,1,2],dtype=DT_NB_INT)
     gi_arr = gaunt_factor_coe_(i_arr, ni)
     Ai = 32. / (3. * CST.sqrt3_ * CST.pi_) * ni * ( gi_arr / (i_arr[:]+3) ).sum()
 
@@ -866,7 +866,7 @@ def collisional_broadening_Res_and_Van_( ni : T_VEC_IA, nj : T_VEC_IA,
            1969A&A......3...462L
     """
 
-    psr = _numpy.array([ 0.0, 4.94E-8, 7.93E-9, 2.75E-9, 1.29E-9, 7.14E-10 ], dtype=T_FLOAT)
+    psr = _numpy.array([ 0.0, 4.94E-8, 7.93E-9, 2.75E-9, 1.29E-9, 7.14E-10 ], dtype=DT_NB_FLOAT)
 
     if ni == 1:
         n = nj
