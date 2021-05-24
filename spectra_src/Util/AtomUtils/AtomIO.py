@@ -465,14 +465,18 @@ def read_conf_(conf_path : T_STR) -> T_DICT[T_STR, T_UNION[None,T_STR]]:
 # functions for constructing structs
 #-------------------------------------------------------------------------------
 
+from .. import ElementUtil as _ElementUtil
+
 def make_Atom_Level_(path : T_STR) -> T_TUPLE[T_INT,T_FLOAT,T_FLOAT,T_INT,T_ARRAY,T_TUPLE[T_TUPLE[T_STR,T_STR,T_STR],...]]:
 
     with open(path, 'r') as f:
         fLines = f.readlines()
     #--- read general info
     rs, title, Z, element, nLevel = read_general_info_(rs=0, lns=fLines)
-    Mass : T_FLOAT = ELEMENT_DICT[element]["Mass"]
-    Abun : T_FLOAT = 10**(ELEMENT_DICT[element]["Abundance"]-12.0)
+    #Mass : T_FLOAT = ELEMENT_DICT[element]["Mass"]
+    Mass : T_FLOAT = _ElementUtil.sym_to_mass_( element )
+    #Abun : T_FLOAT = 10**(ELEMENT_DICT[element]["Abundance"]-12.0)
+    Abun : T_FLOAT = 10**(_ElementUtil.sym_to_abun_( element )-12.0)
     #--- read Level info
     dtype  = _numpy.dtype([
                           ('erg',T_FLOAT),            #: level energy, erg

@@ -1,0 +1,24 @@
+# assuming your path to spectra_src folder is /path/to/spectra/spectra_src
+# assuming your path to anaconda3 or miniconda3 is /path/to/anaconda3
+
+# step.1 create a new environment
+$ conda create -n spectra-py39 python=3.9
+
+# step.2 make the path to spectra folder visible to python in this environment
+$ echo /path/to/spectra/ > /path/to/anaconda3/envs/spectra-py39/lib/python3.9/site-packages/module.pth
+
+# step3. activate environment
+$ conda activate spectra-py39
+
+# step4. install minimum necessary packages for running the source code
+$ pip install numba==0.53.1 numpy==1.20.3 scipy==1.6.3 debtcollector==2.2.0
+
+
+# After installation, every time to run to code, what you need
+# is step.3 (activating your environment)
+
+# to move back to the default environment
+$ conda deactivate
+
+# for examples, check spectra/test/examples/example.*.py
+

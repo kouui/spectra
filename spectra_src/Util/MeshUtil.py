@@ -1,7 +1,7 @@
 
 
 #-------------------------------------------------------------------------------
-# function definition of wvelength mesh utility
+# function definition of wavelength mesh utility
 #-------------------------------------------------------------------------------
 # VERSION
 #

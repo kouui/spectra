@@ -13,7 +13,7 @@ from .Types import *
 from typing import overload as OVERLOAD
 
 from .Enums import *
-from .Elements import ELEMENT_DICT
+from .Elements import ELEMENT_SYMBOL, ELEMENT_Z, ELEMENT_MASS, ELEMENT_ABUN, ELEMENT_IONIZPOTENTIAL
 
 from . import Constants as CST
 from . import Configurations as CFG
