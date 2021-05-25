@@ -1,10 +1,14 @@
 
 #-------------------------------------------------------------------------------
-# function definition of opacity calculation
+# function definition of continuum opacity calculation
 #-------------------------------------------------------------------------------
 # VERSION
 # 0.1.0 
 #    2021/05/18   u.k.   spectra-re
+#        -  migrated from opacity.py
+#-------------------------------------------------------------------------------
+# WARNING
+# 1. wait to solve the mypy bug, Union type in to an overload function
 #-------------------------------------------------------------------------------
 
 
@@ -14,6 +18,13 @@ from . import Hydrogen
 import numpy as _numpy
 from numpy import sqrt as _sqrt
 from numpy import exp as _exp
+
+from debtcollector import removals as _removals # type: ignore
+
+@OVERLOAD
+def thomson_scattering_(n_e : T_FLOAT) -> T_FLOAT: ...
+@OVERLOAD
+def thomson_scattering_(n_e : T_ARRAY) -> T_ARRAY: ...
 
 def thomson_scattering_(n_e : T_VEC_IFA) -> T_VEC_FA:
     r"""
@@ -59,7 +70,12 @@ def thomson_scattering_(n_e : T_VEC_IFA) -> T_VEC_FA:
 #-------------------------------------------------------------------------------
 # HI atom bound-free cross section from lower level ni
 #-------------------------------------------------------------------------------
-
+@OVERLOAD
+def hydrogenic_bf_cross_sec_n_(ni : T_INT, w : T_FLOAT, Z : T_INT) -> T_FLOAT: ...
+@OVERLOAD
+def hydrogenic_bf_cross_sec_n_(ni : T_ARRAY, w : T_FLOAT, Z : T_INT) -> T_ARRAY: ...
+@OVERLOAD
+def hydrogenic_bf_cross_sec_n_(ni : T_INT, w : T_ARRAY, Z : T_INT) -> T_ARRAY: ...
 
 def hydrogenic_bf_cross_sec_n_(ni : T_VEC_IA, w : T_VEC_IFA, Z : T_INT) -> T_VEC_FA:
     r"""
@@ -136,8 +152,15 @@ def hydrogenic_bf_cross_sec_n_(ni : T_VEC_IA, w : T_VEC_IFA, Z : T_INT) -> T_VEC
 #-----------------------------------------------------------------------------
 # HI bound-free Cross section in LTE per 1 HI atom in unit of cm^2
 #-----------------------------------------------------------------------------
+@OVERLOAD
+def HI_bf_LTE_cross_sec_(Te : T_FLOAT, w : T_FLOAT) -> T_FLOAT: ...
 
-def HI_bf_cross_sec_(Te : T_VEC_IFA, w : T_VEC_IFA) -> T_VEC_FA:
+@OVERLOAD
+def HI_bf_LTE_cross_sec_(Te : T_ARRAY, w : T_FLOAT) -> T_ARRAY: ...
+@OVERLOAD
+def HI_bf_LTE_cross_sec_(Te : T_FLOAT, w : T_ARRAY) -> T_ARRAY: ...
+
+def HI_bf_LTE_cross_sec_(Te : T_VEC_IFA, w : T_VEC_IFA) -> T_VEC_FA:
     r"""
     HI bound-free Cross section in LTE per 1 HI atom in unit of cm^2
 
@@ -187,10 +210,10 @@ def HI_bf_cross_sec_(Te : T_VEC_IFA, w : T_VEC_IFA) -> T_VEC_FA:
     .. [2] Robert J. Rutten, "Radiative Transfer in Stellar Atmosphere", 2003.
     """
     if Te > 2E4:
-        
         raise ValueError("partition function of HI is assumed to be 2.0, which is only valid for T < 2E4 [K]")
 
-    n_limit = int( _sqrt( w / CST.ni2cm_ ) ) + 1
+    n_limit = int( _sqrt( w / CST.ni2cm_ ) ) + 1  # CST.ni2cm_ ~ 9.1126E-6  (ichimoto's value : 9.1176E-6 ? ) 
+    u = 2.
 
     if n_limit > 7:
         alpha = 0.
@@ -198,21 +221,69 @@ def HI_bf_cross_sec_(Te : T_VEC_IFA, w : T_VEC_IFA) -> T_VEC_FA:
     else:
         alpha = 0.
         kT = CST.k_ * Te
-        fac = CST.E_Rydberg_ * ( 1. - n_limit**(-2) ) / kT
+        fac = CST.E_Rydberg_ * ( 1. - 1/n_limit/n_limit ) / kT
         #for n in range(_n_limit, min([_n_limit+3, 7])+1 ):
-        for n in range(n_limit, 8 ):
+        for n in range(n_limit, min(n_limit+3, 7)+1 ):
             ## what is this `n*n` here ?
-            alpha += n*n * _exp( -1. * fac ) * hydrogenic_bf_cross_sec_n_(n, w, 1)
+            alpha += n*n * _exp( -1. * fac ) * hydrogenic_bf_cross_sec_n_(n, w, 1) * 2.
 
         ## Cst.h_ * Cst.c_ / Cst.k ~ 1.438787
         ## correction factor
-        alpha *= ( 1. - _exp(-1. * CST.h_* CST.c_/ w / kT ) )
+        alpha *= ( 1. - _exp(-1. * CST.h_* CST.c_/ w / kT ) ) / u
 
     return alpha
+
+#-----------------------------------------------------------------------------
+# H+ free-free CrossSection in LTE per proton
+#-----------------------------------------------------------------------------
+@OVERLOAD
+def gaunt_factor_ff_(Te : T_FLOAT, w : T_FLOAT) -> T_FLOAT: ...
+@OVERLOAD
+def gaunt_factor_ff_(Te : T_ARRAY, w : T_FLOAT) -> T_ARRAY: ...
+@OVERLOAD
+def gaunt_factor_ff_(Te : T_FLOAT, w : T_ARRAY) -> T_ARRAY: ...
+
+def gaunt_factor_ff_(Te : T_VEC_FA, w : T_VEC_FA) -> T_VEC_FA:
+
+    w_AA = w * 1.E8 # [cm --> AA]
+
+    g0 = 1.0828 + 3.865e-6 * Te
+    g1 = 7.564e-7 + (4.920e-10 - 2.482e-15 * Te) *Te
+    g2 = 5.326e-12 + (-3.904e-15 + 1.8790e-20 * Te) * Te
+    gff = g0 + (g1 + g2 * w_AA) * w_AA
+
+    return gff
+
+@OVERLOAD
+def Hp_ff_cross_sec_(Te : T_FLOAT, w : T_FLOAT, Ne : T_FLOAT, Z : T_INT = 1) -> T_FLOAT : ...
+@OVERLOAD
+def Hp_ff_cross_sec_(Te : T_FLOAT, w : T_ARRAY, Ne : T_FLOAT, Z : T_INT = 1) -> T_ARRAY : ...
+@OVERLOAD
+def Hp_ff_cross_sec_(Te : T_ARRAY, w : T_FLOAT, Ne : T_ARRAY, Z : T_INT = 1) -> T_ARRAY : ...
+
+def Hp_ff_cross_sec_(Te : T_VEC_FA, w : T_VEC_FA, Ne : T_VEC_FA, Z : T_INT = 1) -> T_VEC_FA :
+
+    if Te > 2E4:
+        raise ValueError("partition function of HI is assumed to be 2.0, which is only valid for T < 2E4 [K]")
+    
+    kT = CST.k_ * Te
+    #wl = w * 1.E8 # [cm] --> [AA]
+
+    # free-free gaunt factor
+    gff = gaunt_factor_ff_(Te, w)  # type: ignore
+    # what is this 3.6927E+8 ?
+    sgm = 3.6927E+8 *  Ne * Z**2 /_sqrt(Te) / (CST.c_ / w)**3 * gff  # Rutten
+
+    u = 2.
+    a0 = ( 1. - _exp(-1.* CST.h_ * CST.c_ /  w / kT) ) / u
+    alpha = a0 * sgm
+
+    return alpha
+
 #-----------------------------------------------------------------------------
 # HI free-free CrossSection in LTE per 1 HI atom
 #-----------------------------------------------------------------------------
-
+_removals.remove
 def HI_ff_cross_sec_(Te : T_VEC_IFA, w : T_VEC_IFA) -> T_VEC_FA:
     r"""
     HI bound-free Cross section in LTE per 1 HI atom in unit of cm^2
@@ -294,6 +365,12 @@ def HI_ff_cross_sec_(Te : T_VEC_IFA, w : T_VEC_IFA) -> T_VEC_FA:
 #-----------------------------------------------------------------------------
 # H-minus (negative hidrogen) Cross Section per HI atom in unit of cm^2 (*LTE*)
 #-----------------------------------------------------------------------------
+@OVERLOAD
+def Hminus_cross_sec_(Te : T_FLOAT, w : T_FLOAT, Ne : T_FLOAT) -> T_FLOAT: ...
+@OVERLOAD
+def Hminus_cross_sec_(Te : T_ARRAY, w : T_FLOAT, Ne : T_ARRAY) -> T_ARRAY: ...
+@OVERLOAD
+def Hminus_cross_sec_(Te : T_FLOAT, w : T_ARRAY, Ne : T_FLOAT) -> T_ARRAY: ...
 
 def Hminus_cross_sec_(Te : T_VEC_IFA, w : T_VEC_IFA, Ne : T_VEC_IFA) -> T_VEC_FA:
     r"""
@@ -365,6 +442,7 @@ def Hminus_cross_sec_(Te : T_VEC_IFA, w : T_VEC_IFA, Ne : T_VEC_IFA) -> T_VEC_FA
     kff = g0 + (g1+g2*w_AA3)*w_AA3 * 1.E-3
 
     ahm = kbf + kff
+    # what is this 1.38066E-16 ? ideal gas constant ?
     pe = 1.38066E-16 * Ne * Te
     alpha = ahm * pe
 
@@ -373,6 +451,10 @@ def Hminus_cross_sec_(Te : T_VEC_IFA, w : T_VEC_IFA, Ne : T_VEC_IFA) -> T_VEC_FA
 #-----------------------------------------------------------------------------
 # HI Rayleigh scattering CrossSection per 1 HI atom in unit cm^2
 #-----------------------------------------------------------------------------
+@OVERLOAD
+def HI_rayleigh_cross_sec_(w : T_FLOAT) -> T_FLOAT: ...
+@OVERLOAD
+def HI_rayleigh_cross_sec_(w : T_ARRAY) -> T_ARRAY: ...
 
 def HI_rayleigh_cross_sec_(w : T_VEC_IFA) -> T_VEC_FA:
     r"""
@@ -471,6 +553,15 @@ _AVH2P_FR = _numpy.array(
         2.73970e-13,3.00895e-13,3.30827e-13,3.64140e-13,3.99503e-13,
         4.34206e-13 ], dtype=DT_NB_FLOAT)
 
+@OVERLOAD
+def _avH2p_(Te : T_FLOAT, w : T_FLOAT) -> T_FLOAT: ...
+
+@OVERLOAD
+def _avH2p_(Te : T_ARRAY, w : T_FLOAT) -> T_ARRAY: ...
+
+@OVERLOAD
+def _avH2p_(Te : T_FLOAT, w : T_ARRAY) -> T_ARRAY: ...
+
 def _avH2p_(Te : T_VEC_IFA, w : T_VEC_IFA) -> T_VEC_FA:
     r"""
 
@@ -519,19 +610,22 @@ def _avH2p_(Te : T_VEC_IFA, w : T_VEC_IFA) -> T_VEC_FA:
     ev = 911.3047 / w_AA
     Tk = 6.3348e-6 * Te
 
-    for i in range(_AVH2P_E.shape[0]):
-        if _AVH2P_E[i] <= ev:
-            break
-
-    if i == _AVH2P_E.shape[0]-1:
-        n = 45
-    else:
-        n = i
-
-    d   = (ev-_AVH2P_E[n])/(_AVH2P_E[n+1]-_AVH2P_E[n])
-    usq = _AVH2P_US[n] + (_AVH2P_US[n+1]-_AVH2P_US[n])*d
-    upq = _AVH2P_UP[n] + (_AVH2P_UP[n+1]-_AVH2P_UP[n])*d
-    frq = _AVH2P_FR[n] + (_AVH2P_FR[n+1]-_AVH2P_FR[n])*d
+#    for i in range(_AVH2P_E.shape[0]):
+#        if _AVH2P_E[i] <= ev:
+#            break
+#
+#    if i == _AVH2P_E.shape[0]-1:
+#        n = 45
+#    else:
+#        n = i
+#
+#    d   = (ev-_AVH2P_E[n])/(_AVH2P_E[n+1]-_AVH2P_E[n])
+#    usq = _AVH2P_US[n] + (_AVH2P_US[n+1]-_AVH2P_US[n])*d
+#    upq = _AVH2P_UP[n] + (_AVH2P_UP[n+1]-_AVH2P_UP[n])*d
+#    frq = _AVH2P_FR[n] + (_AVH2P_FR[n+1]-_AVH2P_FR[n])*d
+    upq = _numpy.interp(ev, _AVH2P_E, _AVH2P_UP)
+    usq = _numpy.interp(ev, _AVH2P_E, _AVH2P_US)
+    frq = _numpy.interp(ev, _AVH2P_E, _AVH2P_FR)
 
     alpha = _numpy.abs( frq * ( _exp(usq/Tk) - _exp(-upq/Tk) ) )
 
@@ -540,28 +634,30 @@ def _avH2p_(Te : T_VEC_IFA, w : T_VEC_IFA) -> T_VEC_FA:
 #-----------------------------------------------------------------------------
 # H2+ CrossSection per 1 HI atom n unit  cm^2 in LTE
 #-----------------------------------------------------------------------------
-def H2p_cross_sec_(Te : T_VEC_IFA, w : T_VEC_IFA, Ne : T_VEC_IFA, 
-           Nh : T_VEC_IFA) -> T_VEC_FA:
+@OVERLOAD
+def H2p_cross_sec_(Te : T_FLOAT, w : T_FLOAT, Np : T_FLOAT) -> T_FLOAT: ...
+@OVERLOAD
+def H2p_cross_sec_(Te : T_FLOAT, w : T_ARRAY, Np : T_FLOAT) -> T_ARRAY: ...
+@OVERLOAD
+def H2p_cross_sec_(Te : T_ARRAY, w : T_FLOAT, Np : T_ARRAY) -> T_ARRAY: ...
+
+def H2p_cross_sec_(Te : T_VEC_FA, w : T_VEC_FA, Np : T_VEC_FA) -> T_VEC_FA:
     r"""
     return H2+ CrossSection per 1 HI atom n unit of cm^2 in LTE
 
     Parameters
     ----------
-    Te  : T_VEC_IFA, 
+    Te  : T_VEC_FA, 
         electron temperature
         [:math:`K`]
 
-    w : T_VEC_IFA, 
+    w : T_VEC_FA, 
         wavelength
         [:math:`cm`]
 
-    Ne : T_VEC_IFA, 
-        electron number density
+    Np : T_VEC_FA, 
+        proton number density
         [:math:`cm^{-3}`]
-
-    Nh : T_VEC_IFA, 
-        hydrogen number density
-        [:math:`cm^{-3}``]
 
     Returns
     --------
@@ -581,38 +677,46 @@ def H2p_cross_sec_(Te : T_VEC_IFA, w : T_VEC_IFA, Ne : T_VEC_IFA,
 
     - 2019.9.15  K.Ichimoto
     """
-    Pe = 1.38066e-16 * Ne * Te
-
+    # what is this 1.38066E-16 ? ideal gas constant ?
+    #Pe = 1.38066e-16 * Ne * Te
     #/*  -----   solving LTE Saha's eq. for hydrogen   -----	*/
-    q = 2.0*2.07e-16 * Te**(-1.5) * 10.**(5040.*13.6/Te) * Ne
-    Np = 1./(q+1.) * Nh
+    #q = 2.0*2.07e-16 * Te**(-1.5) * 10.**(5040.*13.6/Te) * Ne
+    #Np = 1./(q+1.) * Nh
 
-    alpha = Np * _avH2p_(Te, w)
+    alpha = Np * _avH2p_(Te, w) # type: ignore
     return alpha
 
 #-----------------------------------------------------------------------------
 # hydrogen LTE continuum opacity in cm^{-1}
 #-----------------------------------------------------------------------------
-def H_LTE_opacity(Te : T_VEC_IFA, Ne : T_VEC_IFA, Nh : T_VEC_IFA, 
-                  w : T_VEC_IFA) -> T_VEC_FA:
+@OVERLOAD
+def H_LTE_continuum_opacity_(Te : T_FLOAT, Ne : T_FLOAT, Nh : T_FLOAT,  w : T_FLOAT) -> T_FLOAT: ...
+@OVERLOAD
+def H_LTE_continuum_opacity_(Te : T_ARRAY, Ne : T_ARRAY, Nh : T_ARRAY,  w : T_FLOAT) -> T_ARRAY: ...
+@OVERLOAD
+def H_LTE_continuum_opacity_(Te : T_ARRAY, Ne : T_ARRAY, Nh : T_FLOAT,  w : T_FLOAT) -> T_ARRAY: ...
+@OVERLOAD
+def H_LTE_continuum_opacity_(Te : T_FLOAT, Ne : T_FLOAT, Nh : T_FLOAT,  w : T_ARRAY) -> T_ARRAY: ...
+
+def H_LTE_continuum_opacity_(Te : T_VEC_FA, Ne : T_VEC_FA, Nh : T_VEC_FA,  w : T_VEC_FA) -> T_VEC_FA:
     r"""
     LTE continuum opacity in cm-1, incruding HI, H-, H2, rayleigh scat.
 
     Parameters
     ----------
-    Te  : T_VEC_IFA, 
+    Te  : T_VEC_FA, 
         electron temperature
         [:math:`K`]
 
-    Ne  : T_VEC_IFA, 
+    Ne  : T_VEC_FA, 
         electron number density
         [:math:`cm^{-3}`]
 
-    Nh  : T_VEC_IFA, 
+    Nh  : T_VEC_FA, 
         hydrogen number density
         [:math:`cm^{-3}`]
 
-    w   : T_VEC_IFA, 
+    w   : T_VEC_FA, 
         wavelength
         [:math:`cm`]
 
@@ -644,14 +748,17 @@ def H_LTE_opacity(Te : T_VEC_IFA, Ne : T_VEC_IFA, Nh : T_VEC_IFA,
     """
     #/*  -----   solving LTE Saha's eq. for hydrogen   -----	*/
     q = 2. * 2.07E-16 * Te**(-1.5) * 10.**(5040.*13.6/Te) * Ne
-    N_HI =  q /(q+1.0) * Nh
+    N_HI =  q / ( q + 1. ) * Nh
+    #Np   = 1. / ( q + 1. ) * Nh
+    Np = Nh - N_HI
     kappa = N_HI * (
-             HI_bf_cross_sec_(Te, w) +
-             HI_ff_cross_sec_(Te, w) +
-             Hminus_cross_sec_(Te, w, Ne) +
-             H2p_cross_sec_(Te, w, Ne, Nh) +
-             HI_rayleigh_cross_sec_(w)
+             HI_bf_LTE_cross_sec_(Te, w) + # type: ignore
+             Hminus_cross_sec_(Te, w, Ne) + # type: ignore
+             H2p_cross_sec_(Te, w, Np) + # type: ignore
+             HI_rayleigh_cross_sec_(w) # type: ignore
              )
+    kappa += Np * Hp_ff_cross_sec_(Te, w, Ne) # type: ignore
+    kappa += thomson_scattering_(Ne) # type: ignore
 
     return kappa
 
@@ -664,19 +771,21 @@ if CFG._IS_JIT:
     thomson_scattering_ = nb_vec(**NB_VEC_KWGS) (thomson_scattering_)
 
     hydrogenic_bf_cross_sec_n_ = nb_vec(**NB_VEC_KWGS) (hydrogenic_bf_cross_sec_n_)
-    HI_bf_cross_sec_ = nb_vec(**NB_VEC_KWGS) (HI_bf_cross_sec_)
-    HI_ff_cross_sec_ = nb_vec(**NB_VEC_KWGS) (HI_ff_cross_sec_)
+    HI_bf_LTE_cross_sec_ = nb_vec(**NB_VEC_KWGS) (HI_bf_LTE_cross_sec_)
+    Hp_ff_cross_sec_ = nb_vec(**NB_VEC_KWGS) (Hp_ff_cross_sec_)
+    #HI_ff_cross_sec_ = nb_vec(**NB_VEC_KWGS) (HI_ff_cross_sec_)
     Hminus_cross_sec_= nb_vec(**NB_VEC_KWGS) (Hminus_cross_sec_)
     _avH2p_ = nb_vec(**NB_VEC_KWGS) (_avH2p_)
     H2p_cross_sec_ = nb_vec(**NB_VEC_KWGS) (H2p_cross_sec_)
-    H_LTE_opacity = nb_vec(**NB_VEC_KWGS) (H_LTE_opacity)
+    H_LTE_continuum_opacity_ = nb_vec(**NB_VEC_KWGS) (H_LTE_continuum_opacity_)
 
 else:
 
     hydrogenic_bf_cross_sec_n_ = np_vec(hydrogenic_bf_cross_sec_n_, **NP_VEC_KWGS)
-    HI_bf_cross_sec_ = np_vec(HI_bf_cross_sec_, **NP_VEC_KWGS)
-    HI_ff_cross_sec_ = np_vec(HI_ff_cross_sec_, **NP_VEC_KWGS)
+    HI_bf_LTE_cross_sec_ = np_vec(HI_bf_LTE_cross_sec_, **NP_VEC_KWGS)
+    Hp_ff_cross_sec_ = np_vec(Hp_ff_cross_sec_, **NP_VEC_KWGS)
+    #HI_ff_cross_sec_ = np_vec(HI_ff_cross_sec_, **NP_VEC_KWGS)
     Hminus_cross_sec_= np_vec(Hminus_cross_sec_, **NP_VEC_KWGS)
     _avH2p_ = np_vec(_avH2p_, **NP_VEC_KWGS)
     H2p_cross_sec_ = np_vec(H2p_cross_sec_, **NP_VEC_KWGS)
-    H_LTE_opacity = np_vec(H_LTE_opacity, **NP_VEC_KWGS)
+    H_LTE_continuum_opacity_ = np_vec(H_LTE_continuum_opacity_, **NP_VEC_KWGS)

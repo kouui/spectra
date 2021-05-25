@@ -6,6 +6,7 @@
 # VERSION
 # 0.1.0 
 #    2021/05/18   u.k.   spectra-re
+#       - added R_
 #    2020/05/08   k.i.   alp_
 #-------------------------------------------------------------------------------
 
@@ -45,6 +46,7 @@ a0_          : T_FLOAT = 5.2917720859 * 1.E-9        #: Bohr radius, [:math:`cm`
 alp_         : T_FLOAT = 1/137.036                   #: fine structure constant, [:math:`-`]
 AU_          : T_FLOAT = 1.49597871 * 1.E+13         #: astronomical unit, distance from the sun to our earth, [:math:`cm`]
 R_sun_       : T_FLOAT = 6.957 * 1.E+10              #: Solar radius, [:math:`cm`]
+R_           : T_FLOAT = 8.314 * 1.E+7               #: ideal gas universal gas constant, [:math:`erg \cdot mol^{-1} \cdot K^{-1}`]
 
 #-------------------------------------------------------------------------------
 # constants for the convenience of computation
@@ -62,7 +64,7 @@ C0_          : T_FLOAT = 5.465366   * 1.E-11
 """
 
 #-------------------------------------------------------------------------------
-# constants for notations
+# constants for notations  # need modification
 #-------------------------------------------------------------------------------
 
 L_s2i        : T_DICT[T_STR,T_INT] = { "S" : 0, "P" : 1, "D" : 2, "F" : 3, "G" : 4, "H" : 5, "I" : 6 }
