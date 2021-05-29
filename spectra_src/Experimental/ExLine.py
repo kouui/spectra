@@ -24,7 +24,7 @@ class Level:
 @_dataclass(**STRUCT_KWGS_UNFROZEN)
 class Line:
 
-    elm        : T_STR          #  element, ex. 'FeI', 'H_I'
+    ion        : T_STR          #  element, ex. 'FeI', 'H_I'
     name       : T_STR          #  name (Ha) etc.
     mode       : T_STR          #  profile mode ('HF','v1', 'Gaus' etc)
 
@@ -33,7 +33,7 @@ class Line:
 
 
     wl0        : T_FLOAT        #  central wavelength  [cm]
-    ep         : T_FLOAT        #  excitation potential, [eV]
+    ep         : T_FLOAT        #  excitation potential, [erg]
     gf         : T_FLOAT        #  gf value
     gamma      : T_FLOAT        #  dumping width in unit of. Dopp./w
     geff       : T_FLOAT        #  effective Lande-g
