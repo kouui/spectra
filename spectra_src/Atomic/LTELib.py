@@ -564,8 +564,19 @@ _UFUNC_COEFFICIENT_TABLE : T_DICT[ T_STR, T_TUPLE[T_FLOAT, ...] ] = {
     'Ni_III' : (_numpy.log10(21), 0., 0., 0., 0.),  # ufunc = 21,
     'Ba_I'   : (4.83034, -10.8244, 10.0364, -4.34979, 0.719568),
     'Ba_II'  : (2.54797, -6.38871, 7.98813, -4.38907, 0.862666),
-    'Ba_iii' : (0., 0., 0., 0., 0.)  # ufunc = 1,
+    'Ba_III' : (0., 0., 0., 0., 0.)  # ufunc = 1,
 }
+
+_UFUNC_SYMBOL : T_TUPLE[T_STR,...] = tuple( ( key for key, val in _UFUNC_COEFFICIENT_TABLE.items() ) )
+_UFUNC_COEFFICIENT_ARRAY : T_ARRAY = _numpy.empty( (len(_UFUNC_SYMBOL), 5), dtype=DT_NB_FLOAT )
+for _k in range(_UFUNC_COEFFICIENT_ARRAY.shape[0]):
+    _UFUNC_COEFFICIENT_ARRAY[_k,:] = _UFUNC_COEFFICIENT_TABLE[ _UFUNC_SYMBOL[_k] ]
+del _k
+
+@OVERLOAD
+def Ufunc_(elm : T_STR, T : T_FLOAT) -> T_FLOAT: ...
+@OVERLOAD
+def Ufunc_(elm : T_STR, T : T_ARRAY) -> T_ARRAY: ...
 
 def Ufunc_(elm : T_STR, T : T_UNION[T_ARRAY,T_FLOAT,T_INT]) -> T_UNION[T_ARRAY,T_FLOAT]:
     r"""
@@ -607,7 +618,12 @@ def Ufunc_(elm : T_STR, T : T_UNION[T_ARRAY,T_FLOAT,T_INT]) -> T_UNION[T_ARRAY,T
     .. [2] 2009  table
     """
 
-    c : T_TUPLE[T_FLOAT, ...] = _UFUNC_COEFFICIENT_TABLE[elm]
+    #c : T_TUPLE[T_FLOAT, ...] = _UFUNC_COEFFICIENT_TABLE[elm]
+    k : T_INT = _UFUNC_SYMBOL.index(elm)
+    if k < 0:
+        raise ValueError("Cannot find this element in UFUNC table")
+
+    c : T_ARRAY = _UFUNC_COEFFICIENT_ARRAY[k,:]
     
     th = 5040. / T
     s : T_UNION[T_ARRAY, T_FLOAT] = c[0]

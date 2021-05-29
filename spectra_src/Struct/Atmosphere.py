@@ -45,7 +45,7 @@ class AtmosphereC1D:
     Te : T_ARRAY
     Vd : T_ARRAY
     Vt : T_ARRAY
-    depth : T_ARRAY        # depth of the atmosphere in line-of-sight
+    Z  : T_ARRAY            # height of the atmosphere
 
     tau5 : T_ARRAY          # (integrated) optical depth at 500nm at each depth point
 
@@ -81,12 +81,14 @@ class AtmosphereC1D:
 import numpy as _numpy
 from ..Atomic import ContinuumOpacity as _ContinuumOpacity
 
+from ..Experimental import ExTau as _Tau
+
 def init_VAL_( val_type : T_STR = "C" ) -> AtmosphereC1D:
 
     val_type = val_type.upper()
 
     if val_type == 'A':
-        depth = _numpy.array( #* h (km)	*/
+        Z = _numpy.array( #* h (km)	*/
             [ -75., -50., -25.,   0.,  50., 100., 150., 250., 350., 450.,
               510., 560., 605., 655., 705., 755., 855., 905., 980.,1080.,
              1205.,1280.,1380.,1505.,1605.,1785.,1915.,1990.,2040.,2074.,
@@ -127,7 +129,7 @@ def init_VAL_( val_type : T_STR = "C" ) -> AtmosphereC1D:
             9.87, 11.28], dtype=DT_NB_FLOAT)
 
     elif val_type == 'C':
-        depth = _numpy.array( #* h (km)	*/
+        Z = _numpy.array( #* h (km)	*/
             [ -75., -50., -25.,   0.,  50., 100., 150., 250., 350., 450.,
               515., 555., 605., 655., 705., 755., 855., 905., 980.,1065., 
              1180.,1280.,1380.,1515.,1605.,1785.,1925.,1990.,2016.,2050.,
@@ -168,7 +170,7 @@ def init_VAL_( val_type : T_STR = "C" ) -> AtmosphereC1D:
             9.87, 11.28], dtype=DT_NB_FLOAT)
 
     elif val_type == 'F':
-        depth = _numpy.array( #* h (km)	*/
+        Z = _numpy.array( #* h (km)	*/
             [   -75., -50., -25.,   0.,  50., 100., 150., 250., 350., 450.,
               500., 550., 600., 650., 700., 750., 855., 905., 980.,1065., 
              1210.,1280.,1380.,1515.,1605.,1785.,1890.,1973.,1968.,1992.,
@@ -211,31 +213,15 @@ def init_VAL_( val_type : T_STR = "C" ) -> AtmosphereC1D:
     else:
         raise NotImplementedError(f"VAL of type {val_type} has not yet been implemented.")
 
-    #-- flip direction : [interior, surface] --> [surface, interior]
-    depth = depth[::-1].copy() * 1.E5 # [km] --> [cm]
-    Te    = Te[::-1].copy()
-    Nh    = Nh[::-1].copy()
-    Ne    = Ne[::-1].copy()
-    Vt    = Vt[::-1].copy() * 1.E5 # [km/s] --> [cm/s]
-
+    #-- keep direction : [interior, surface]
+    Z[:]  *= 1.E5      # [km] --> [cm]
+    Vt[:] *= 1.E5      # [km] --> [cm]
+    
     Vd = _numpy.zeros_like( Vt )
-
     #-- continuum optical depth @500nm (LTE)
     wl0 = 5.E-5 #[cm]
     xc : T_ARRAY = _ContinuumOpacity.H_LTE_continuum_opacity_(Te, Ne, Nh, wl0)
-    n_depth = depth.shape[0]
-    tau5 = _numpy.zeros( n_depth, dtype=DT_NB_FLOAT )
-    
-    ## : ichimoto's solution for integrating xc
-    tau5[0] = xc[0] * ( depth[0] - depth[1] ) * 0.5
-    for i in range(1, n_depth):
-        tau5[i] = tau5[i-1] + ( depth[i-1] - depth[i] ) * ( xc[i-1] + xc[i] ) * 0.5
-    
-    ## : kouui's solution for integrating xc
-#    tau5[0] = xc[0] * ( depth[0] - depth[1] ) * 0.5
-#    for i in range(1, n_depth-1):
-#        tau5[i] = tau5[i-1] + xc[i] * ( depth[i-1] - depth[i+1] ) * 0.5 
-#    tau5[-1] = xc[-1] * ( depth[-2] - depth[-1] ) * 0.5
+    tau5 = _Tau.tau_( Z[:], xc[:] )
 
     atmos = AtmosphereC1D(
         model = f"VAL-{val_type}",
@@ -244,12 +230,10 @@ def init_VAL_( val_type : T_STR = "C" ) -> AtmosphereC1D:
         Te = Te,
         Vd = Vd,
         Vt = Vt,
-        depth=depth,
-        tau5=tau5,
-        is_uniform=False,
-        ndim = 1,
-
-
+        Z  = Z,
+        tau5 = tau5,
+        is_uniform = False,
+        ndim = 1
     )
 
     return atmos
