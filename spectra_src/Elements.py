@@ -78,7 +78,7 @@ ELEMENT_DICT["Ba"]   = {"Z":56, "Mass":137.3400, "Abundance":1.95, "IonizeEV" : 
 
 ## make tuples
 ELEMENT_SYMBOL  = tuple( ( key for key, val in ELEMENT_DICT.items() ) )
-ELEMENT_Z       = tuple( ( val["Mass"] for key, val in ELEMENT_DICT.items() ) )
+ELEMENT_Z       = tuple( ( val["Z"] for key, val in ELEMENT_DICT.items() ) )
 ELEMENT_MASS    = tuple( ( val["Mass"] for key, val in ELEMENT_DICT.items() ) )
 ELEMENT_ABUN    = tuple( ( val["Abundance"] for key, val in ELEMENT_DICT.items() ) )
 # in unit of [eV]

@@ -71,7 +71,7 @@ def ion_to_ioniz_potential_( ion : T_STR ) -> T_FLOAT:
     ip_arr = ELEMENT_IONIZPOTENTIAL[ _sym_to_idx_(sym) ]
     stage_int = _RomanUtil.roman_to_index_( stage )
     
-    return ip_arr[ stage_int - 1 ]
+    return ip_arr[ stage_int - 1 ] * CST.eV2erg_
 
 def shfit_ion_(ion : T_STR, k : T_INT ) -> T_STR:
 

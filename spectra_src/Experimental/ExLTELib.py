@@ -95,7 +95,7 @@ def log_saha_(ion : T_STR, T : T_VEC_FA) -> T_VEC_FA:
 
     ionization_potential : T_FLOAT = _ElementUtil.ion_to_ioniz_potential_( ion )
     lphais = _numpy.log( _LTELib.Ufunc_(ion1,T) / _LTELib.Ufunc_(ion1p,T) ) + \
-             11604.52 * ionization_potential / T + \
+             CST.eV2erg_ * ionization_potential / (CST.k_ * T) + \
              _numpy.log((T**(-1.5))*ci)
     
     return lphais
