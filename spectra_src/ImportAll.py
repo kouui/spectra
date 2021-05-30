@@ -9,8 +9,7 @@
 
 #from .ImportExternalModule import *
 
-import warnings as WARNINGS
-WARNINGS.simplefilter('once', UserWarning)
+
 
 from .Types import *
 from typing import overload as OVERLOAD
@@ -21,7 +20,7 @@ from .Elements import ELEMENT_SYMBOL, ELEMENT_Z, ELEMENT_MASS, ELEMENT_ABUN, ELE
 from . import Constants as CST
 from . import Configurations as CFG
 
-
+from .Warnings import WARN_
 #-------------------------------------------------------------------------------
 # numba related functions/class
 #-------------------------------------------------------------------------------
