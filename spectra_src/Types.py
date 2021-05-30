@@ -70,8 +70,9 @@ T_E_ATMOSPHERE_COORDINATE_TYPE = T_LITERAL[E_ATMOSPHERE_COORDINATE_TYPE.POINT,E_
 # numba types
 #-------------------------------------------------------------------------------
 
-DT_NB_FLOAT = "float64"
-DT_NB_INT   = "int64"
+DT_NB_FLOAT    = "float64"
+DT_NB_INT      = "int64"
+DT_NB_COMPLEX  = "complex128"
 #import numba.types as nb_types     # type: ignore
 #
 #T_NB_FLOAT1D = nb_types.float64[:]         # type: ignore

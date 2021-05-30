@@ -24,7 +24,7 @@ class Level:
 @_dataclass(**STRUCT_KWGS_UNFROZEN)
 class Line:
 
-    ion        : T_STR          #  element, ex. 'FeI', 'H_I'
+    ion        : T_STR          #  element, ex. 'Fe_I', 'H_I'
     name       : T_STR          #  name (Ha) etc.
     mode       : T_STR          #  profile mode ('HF','v1', 'Gaus' etc)
 

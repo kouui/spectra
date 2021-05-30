@@ -1,0 +1,52 @@
+#-------------------------------------------------------------------------------
+# experimental function creating profile
+#-------------------------------------------------------------------------------
+# VERSION
+# 0.1.1
+#    2021/05/29   k.i., u.k. 
+#        - 
+# 0.1.0 
+#    2021/05/18   u.k.   spectra-re
+#-------------------------------------------------------------------------------
+
+from ..ImportAll import *
+
+import numpy as _numpy
+from numpy import abs as _abs
+from numpy import exp as _exp
+
+def hf_(a : T_FLOAT, x : T_ARRAY) -> T_TUPLE[T_ARRAY,T_ARRAY]:
+    
+    x_1d = x.reshape(-1)
+
+    w4_1d = _numpy.empty( x.size, dtype = DT_NB_COMPLEX )
+
+    for i in range(x.size):
+        v = x_1d[i]
+        
+        t = a - 1j * v
+        s = _abs(v) + a
+        
+        if s >= 15.:
+            val = t * 0.5641896 / ( 0.5 + t*t )
+        elif 5.5 <= s < 15.:
+            u = t*t
+            val = t * ( 1.410474 + u*0.5641896 ) / ( 0.75 + u * ( 3.+u ) ) 
+        else:
+            if a >= 0.195 * _abs(v) - 0.176 :
+                val = (16.4955+t*(20.20933+t*(11.96482+t*(3.778987+t*0.5642236)))) /  \
+                      (16.4955+t*(38.82363+t*(39.27121+t*(21.69274 +t*(6.699398+t)))))
+            else:
+                u = t*t
+                val = _exp(u)-t * \
+                    (36183.31-u*(3321.9905-u*(1540.787-u*(219.0313-u*(35.76683-u*(1.320522-u*0.56419)))))) / \
+                    (32066.6-u*(24322.84-u*(9022.228-u*(2186.181-u*(364.2191-u*(61.57037-u*(1.841439-u)))))))
+
+        w4_1d[i] = val
+    
+    w4 = w4_1d.reshape(x.shape)
+    h = w4.real / CST.sqrtPi_
+    f = w4.imag / CST.sqrtPi_
+
+    return h, f
+
