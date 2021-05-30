@@ -277,7 +277,6 @@ def line_prof_lte_(atmos : _Atmosphere.AtmosphereC1D, line : _Line.Line,
     for j in range(0,nw):
         v = dw[j] / dld   # normalize 
         h, f = _Profile.hf_(gamma, v-vv)
-        h : T_FLOAT
         # hf,l.a,v-vv,h,f
         # xl : line opacity at a specific wavelength along line-of-sight
         xl = xl0[:] * h

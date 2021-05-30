@@ -106,6 +106,3 @@ STRUCT_KWGS_UNFROZEN : T_DICT[T_STR, T_BOOL] = {
 #-------------------------------------------------------------------------------
 # logging and warning
 #-------------------------------------------------------------------------------
-
-import warnings
-warnings.simplefilter('always')
