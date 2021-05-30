@@ -643,3 +643,6 @@ if CFG._IS_JIT:
     boltzmann_distribution_ = nb_vec( **NB_VEC_KWGS ) ( boltzmann_distribution_ )
     saha_distribution_      = nb_vec( **NB_VEC_KWGS ) ( saha_distribution_ )
     planck_cm_              = nb_vec( **NB_VEC_KWGS ) ( planck_cm_ )
+
+else:
+    planck_cm_    = np_vec(planck_cm_, **NP_VEC_KWGS)

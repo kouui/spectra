@@ -292,7 +292,16 @@ def line_prof_lte_(atmos : _Atmosphere.AtmosphereC1D, line : _Line.Line,
     return prof, ic, contrib
 
 
-    
+#-----------------------------------------------------------------------------
+# numba optimization
+#-----------------------------------------------------------------------------
+
+if CFG._IS_JIT:
+
+    pass
+
+else:
+    population_to_H_    = np_vec(population_to_H_, **NP_VEC_KWGS)
     
 
 

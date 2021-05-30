@@ -210,7 +210,8 @@ def HI_bf_LTE_cross_sec_(Te : T_VEC_IFA, w : T_VEC_IFA) -> T_VEC_FA:
     .. [2] Robert J. Rutten, "Radiative Transfer in Stellar Atmosphere", 2003.
     """
     if Te > 2E4:
-        raise ValueError("partition function of HI is assumed to be 2.0, which is only valid for T < 2E4 [K]")
+        WARNINGS.warn("partition function of HI is assumed to be 2.0, which is only valid for T < 2E4 [K]")
+        #raise ValueError("partition function of HI is assumed to be 2.0, which is only valid for T < 2E4 [K]")
 
     n_limit = int( _sqrt( w / CST.ni2cm_ ) ) + 1  # CST.ni2cm_ ~ 9.1126E-6  (ichimoto's value : 9.1176E-6 ? ) 
     u = 2.
@@ -264,7 +265,8 @@ def Hp_ff_cross_sec_(Te : T_ARRAY, w : T_FLOAT, Ne : T_ARRAY, Z : T_INT = 1) -> 
 def Hp_ff_cross_sec_(Te : T_VEC_FA, w : T_VEC_FA, Ne : T_VEC_FA, Z : T_INT = 1) -> T_VEC_FA :
 
     if Te > 2E4:
-        raise ValueError("partition function of HI is assumed to be 2.0, which is only valid for T < 2E4 [K]")
+        WARNINGS.warn("partition function of HI is assumed to be 2.0, which is only valid for T < 2E4 [K]")
+        #raise ValueError("partition function of HI is assumed to be 2.0, which is only valid for T < 2E4 [K]")
     
     kT = CST.k_ * Te
     #wl = w * 1.E8 # [cm] --> [AA]
@@ -341,8 +343,8 @@ def HI_ff_cross_sec_(Te : T_VEC_IFA, w : T_VEC_IFA) -> T_VEC_FA:
 
     """
     if Te > 2E4:
-        
-        raise ValueError("partition function of HI is assumed to be 2.0, which is only valid for T < 2E4 [K]")
+        WARNINGS.warn("partition function of HI is assumed to be 2.0, which is only valid for T < 2E4 [K]")
+        #raise ValueError("partition function of HI is assumed to be 2.0, which is only valid for T < 2E4 [K]")
 
     kT = CST.k_ * Te
 
