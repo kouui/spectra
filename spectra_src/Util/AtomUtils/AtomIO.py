@@ -3,6 +3,9 @@
 # definition of functions for creating Atom struct
 #-------------------------------------------------------------------------------
 # VERSION
+# 0.1.1
+#    2021/06/07   u.k.
+#        - `Abun : T_FLOAT = _ElementUtil.sym_to_abun_( element )``
 # 0.1.0 
 #    2021/05/18   u.k.   spectra-re
 #-------------------------------------------------------------------------------
@@ -476,7 +479,8 @@ def make_Atom_Level_(path : T_STR) -> T_TUPLE[T_INT,T_FLOAT,T_FLOAT,T_INT,T_ARRA
     #Mass : T_FLOAT = ELEMENT_DICT[element]["Mass"]
     Mass : T_FLOAT = _ElementUtil.sym_to_mass_( element )
     #Abun : T_FLOAT = 10**(ELEMENT_DICT[element]["Abundance"]-12.0)
-    Abun : T_FLOAT = 10**(_ElementUtil.sym_to_abun_( element )-12.0)
+    #Abun : T_FLOAT = 10**(_ElementUtil.sym_to_abun_( element )-12.0)
+    Abun : T_FLOAT = _ElementUtil.sym_to_abun_( element )
     #--- read Level info
     dtype  = _numpy.dtype([
                           ('erg',T_FLOAT),            #: level energy, erg

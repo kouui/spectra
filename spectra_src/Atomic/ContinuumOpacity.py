@@ -3,6 +3,10 @@
 # function definition of continuum opacity calculation
 #-------------------------------------------------------------------------------
 # VERSION
+# 0.1.1
+#    2021/06/07   u.k.
+#        - modified HI_rayleigh_cross_sec_
+#        - in _avH2p_, cubic v.s. linear : 3x difference
 # 0.1.0 
 #    2021/05/18   u.k.   spectra-re
 #        -  migrated from opacity.py
@@ -222,7 +226,7 @@ def HI_bf_LTE_cross_sec_(Te : T_VEC_IFA, w : T_VEC_IFA) -> T_VEC_FA:
     else:
         alpha = 0.
         kT = CST.k_ * Te
-        fac = CST.E_Rydberg_ * ( 1. - 1/n_limit/n_limit ) / kT
+        fac = CST.E_Rydberg_ * ( 1. - 1/(n_limit*n_limit) ) / kT
         #for n in range(_n_limit, min([_n_limit+3, 7])+1 ):
         for n in range(n_limit, min(n_limit+3, 7)+1 ):
             ## what is this `n*n` here ?
@@ -500,12 +504,12 @@ def HI_rayleigh_cross_sec_(w : T_VEC_IFA) -> T_VEC_FA:
     """
     w_AA = w * 1.E8
     if w_AA < 1026.:
-       alpha = 0.
-    else:
-       w_AA2_m1 = 1. / (w_AA * w_AA)
-       alpha = 5.799E13 * w_AA2_m1**2 + 1.422E20 * w_AA2_m1**3 + 2.784 * w_AA2_m1**4
+       w_AA = 1026.
 
-    return alpha * 1.E-26
+    w_AA2_m1 = 1. / (w_AA * w_AA)
+    alpha = 5.799E-13 * w_AA2_m1**2 + 1.422E-6 * w_AA2_m1**3 + 2.784 * w_AA2_m1**4
+
+    return alpha
 
 #-----------------------------------------------------------------------------
 # H2+ CrossSection per 1 HI atom and per 1 H+ in unit of cm^5?

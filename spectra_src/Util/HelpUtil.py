@@ -163,7 +163,6 @@ def _help_attribute_( obj : T_ANY, level : T_INT ):
         print(s, end='')
 
 
-
 def help_( obj : T_ANY ):
 
     _help_attribute_( obj, 0 )

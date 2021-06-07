@@ -3,7 +3,9 @@
 # function definition of Element Util
 #-------------------------------------------------------------------------------
 # VERSION
-#
+# 0.1.1
+#    2021/06/07   u.k.
+#        - sym_to_abun_ return  10.**(x-12.0)
 # 0.1.0 
 #    2021/05/18   u.k.   spectra-re
 #-------------------------------------------------------------------------------
@@ -33,7 +35,8 @@ def sym_to_mass_( ele : T_STR ) -> T_FLOAT:
 def sym_to_abun_( ele : T_STR ) -> T_FLOAT:
 
     idx = _sym_to_idx_( ele )
-    return ELEMENT_ABUN[idx]
+    return 10.**(ELEMENT_ABUN[idx]-12.0)
+    #return ELEMENT_ABUN[idx]
 
 #def sym_to_ioniz_potential_( ele : T_STR ):
 #

@@ -4,7 +4,8 @@
 # VERSION
 # 0.1.1
 #    2021/05/29   k.i., u.k. 
-#        - 
+#        - fixed log_saha_, population_to_H_ --> 
+#          now we are able to reproduce ichimoto's LTE transfer result
 # 0.1.0 
 #    2021/05/18   u.k.   spectra-re
 #-------------------------------------------------------------------------------
@@ -95,7 +96,7 @@ def log_saha_(ion : T_STR, T : T_VEC_FA) -> T_VEC_FA:
 
     ionization_potential : T_FLOAT = _ElementUtil.ion_to_ioniz_potential_( ion )
     lphais = _numpy.log( _LTELib.Ufunc_(ion1,T) / _LTELib.Ufunc_(ion1p,T) ) + \
-             CST.eV2erg_ * ionization_potential / (CST.k_ * T) + \
+             ionization_potential / (CST.k_ * T) + \
              _numpy.log((T**(-1.5))*ci)
     
     return lphais
@@ -158,12 +159,12 @@ def population_to_H_(ion : T_STR, ep : T_FLOAT, T : T_VEC_FA, Ne : T_VEC_FA) -> 
             if diff > 70.:
                 diff = 70.
             ss += _numpy.exp( diff )
-    
-    ep_eV = ep / CST.eV2erg_
-    rijk = _ElementUtil.sym_to_abun_( sym ) * \
-           _numpy.exp( -11_604.52 * ep_eV / T ) / \
-           _LTELib.Ufunc_(ion, T) / ss
 
+    #ep_eV = ep / CST.eV2erg_
+    
+    rijk = _ElementUtil.sym_to_abun_( sym ) * \
+           _numpy.exp( -ep / (CST.k_*T) ) / \
+           _LTELib.Ufunc_(ion, T) / ss
     return rijk
 
 @OVERLOAD
@@ -209,7 +210,7 @@ def xl_lte_(ion : T_STR, wl0 : T_FLOAT, ep : T_FLOAT, gf : T_FLOAT, T : T_VEC_FA
     wl0_AA = wl0 * 1.E+8 # [cm] -> [AA]
     dld_AA = dld * 1.E+8 # [cm] -> [AA] ?
     s0 = 4.99468E-21 * wl0_AA*wl0_AA / dld_AA
-    stim = 1. - _numpy.exp( -1.4388E+8 / T / wl0_AA ) # correction of stimilated ...
+    stim = 1. - _numpy.exp( - (CST.h_*CST.c_) / (wl0*CST.k_*T) ) # correction of stimilated ...
     rijk = population_to_H_( ion, ep, T, Ne )
 
     return Nh * rijk * gf * s0 * stim
@@ -255,8 +256,7 @@ def line_prof_lte_(atmos : _Atmosphere.AtmosphereC1D, line : _Line.Line,
     nZ = Z.shape[0]
     nw = dw.shape[0]
     # find center wavelength
-    j_min = dw.argmin()
-
+    #j_min = _numpy.abs(dw).argmin()
 
 
     xc : T_ARRAY = _ContinuumOpacity.H_LTE_continuum_opacity_( Te[:], Ne[:], Nh[:], wl0 )
@@ -273,6 +273,7 @@ def line_prof_lte_(atmos : _Atmosphere.AtmosphereC1D, line : _Line.Line,
     vv : T_ARRAY = _BasicP.dop_vel_to_shift_(wl0, Vd[:]) / dld[:]
 
     prof = _numpy.empty( nw, dtype=DT_NB_FLOAT )
+    contrib = _numpy.empty( (nw,nZ), dtype=DT_NB_FLOAT )
     contrib : T_ARRAY
     for j in range(0,nw):
         v = dw[j] / dld   # normalize 
@@ -283,9 +284,10 @@ def line_prof_lte_(atmos : _Atmosphere.AtmosphereC1D, line : _Line.Line,
         x = xl[:] + xc[:]
         intens1, cntrb, tau = lte_integ_(Z[:], Te[:], x[:], wl0, um)
         prof[j] = intens1
-        # prof[j] = lteinteg(a.h,a.t,x,l.wl0,um,contrib=cntr,tau=tau);
-        if j == j_min:
-            contrib = cntrb
+        #if j == j_min:
+        #    contrib = cntrb
+        
+        contrib[j,:] = cntrb[:]
 
     
     return prof, ic, contrib
