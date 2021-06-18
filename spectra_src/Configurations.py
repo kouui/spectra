@@ -21,7 +21,7 @@ _ROOT_DIR : T_STR = os.path.abspath( os.path.join( os.path.dirname(__file__), ".
 
 
 
-_IS_JIT       : T_BOOL = False
+_IS_JIT       : T_BOOL = True
 
 _IS_NOGIL     : T_BOOL = True
 

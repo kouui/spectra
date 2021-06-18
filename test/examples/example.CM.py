@@ -15,6 +15,7 @@ atom, wMesh, path_dict = Atom.init_Atom_(conf_path,is_hydrogen=True)
 atmos = Atmosphere.Atmosphere0D(Nh=1.E12, Ne=1.E11, Te=7.E3, Vd=0., Vt=5.E5)
 radiation = Radiation.init_Radiation_(atmos, wMesh, 0.5)
 SE_con, Rate_con = SELib.cal_SE_with_Nh_Te_(atom, atmos, wMesh,radiation, Nh_SE = None)
+
 Cloud_con = SlabModel.SE_to_slab_0D_(atom, atmos, SE_con, depth = 1.E3 * 1.E5) # 1_000 [km]
 
 # Cloud_con.w0[:]             central wavelength in [cm]

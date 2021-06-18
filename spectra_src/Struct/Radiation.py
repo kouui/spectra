@@ -45,6 +45,7 @@ def init_Radiation_(atmos : T_UNION[_Atmosphere.Atmosphere0D,_Atmosphere.Atmosph
         Tr = atmos.Tr
         PI_intensity = _LTELib.planck_cm_(Cont_mesh[:,:], Tr)
     else:
+        #  TODO : average backRad for PI_intensity ?
         PI_intensity = _PhotoIonize.interpolate_PI_intensity_(backRad[:,:], Cont_mesh[:,:])
 
     radiation = Radiation(

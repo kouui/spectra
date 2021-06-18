@@ -11,7 +11,7 @@ import numpy as np
 
 import matplotlib.pyplot as plt
 
-def set_imshow_ticks(axe, arr, axis, points=None, fmt='%1.3f', rot=0, fontsize=None):
+def set_imshow_ticks_(axe, arr, axis, points=None, fmt='%1.3f', rot=0, fontsize=None):
     r"""
     customize ticks and ticklabels for a specific axe.
 
@@ -81,7 +81,7 @@ def set_imshow_ticks(axe, arr, axis, points=None, fmt='%1.3f', rot=0, fontsize=N
     return None
 
 
-def remove_tick_ticklabel(*args, kind="xy"):
+def remove_tick_ticklabel_(*args, kind="xy"):
     r"""
     turn off x/y ticks and ticklables.
 
@@ -107,7 +107,7 @@ def remove_tick_ticklabel(*args, kind="xy"):
                 left=False,         # ticks along the left edge are off
                 labelleft=False)
 
-def remove_spline(*args,pos=("left","right","top","bottom")):
+def remove_spline_(*args,pos=("left","right","top","bottom")):
     r"""
     turn off the spline of all axes(*args)
     """
@@ -119,7 +119,7 @@ def remove_spline(*args,pos=("left","right","top","bottom")):
             ax.spines[p].set_visible(False)
 
 
-def axes_no_padding(fig_kw={"figsize":(8,4),"dpi":100}, axe_kw={"ax1":[0,0,1,1]}):
+def axes_no_padding_(fig_kw={"figsize":(8,4),"dpi":100}, axe_kw={"ax1":[0,0,1,1]}):
     r""" """
     fig = plt.figure(figsize=fig_kw["figsize"], dpi=fig_kw["dpi"])
 

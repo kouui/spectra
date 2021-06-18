@@ -7,7 +7,7 @@ $ conda create -n spectra-py39 -c conda-forge python=3.9 # windows
 
 # step.2 make the path to spectra folder visible to python in this environment
 $ echo /path/to/spectra/ > /path/to/anaconda3/envs/spectra-py39/lib/python3.9/site-packages/module.pth
-$ echo /path/to/spectra/ > /path/to/anaconda3/envs/spectra-py39/Lib/site-packages/module.pth
+$ echo /path/to/spectra/ > /path/to/anaconda3/envs/spectra-py39/Lib/site-packages/module.pth # windows
 
 # step3. activate environment
 $ conda activate spectra-py39
@@ -30,7 +30,7 @@ bakcup :
 ## other packages
 $ pip install matplotlib sympy
 
-## jupyter notebook
+## for jupyter notebook
 ## https://starpentagon.net/analytics/conda_env_jupyter_notebook/
 $ conda install -c conda-forge notebook ipykernel16:38
 $ ipython kernel install --user --name spectra-py39

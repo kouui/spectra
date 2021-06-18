@@ -79,7 +79,6 @@ def SE_to_slab_0D_(atom : _Atom.Atom, atmos : _Atmosphere.Atmosphere0D,
     )
 
     return cloud_con
-        
 
 
 

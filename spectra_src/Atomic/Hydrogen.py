@@ -2,9 +2,13 @@
 # function definition of process of hydrogen atom
 #-------------------------------------------------------------------------------
 # VERSION
+# 0.1.1
+#    2-21/06/15   u.k.
+#        - `Gaunt_factor_Gingerich_cm_()`, `w_um = w * 1E4` -> `w_um = w * 1E5`
+#          [cm] -> [um] is *1E4, why *1E5?
 # 0.1.0 
 #    2021/05/18   u.k.   spectra-re
-#        - `Gaunt_factor_Gingerich_cm_()`, `w_um = w * 1E5` -> `w_um = w * 1.E4`
+#        - `Gaunt_factor_Gingerich_cm_()`, `w_um = w * 1E5` -> `w_um = w * 1E4`
 # 0.0.1
 #    2020/11/10   u.k.
 #        - `PI_cross_section_cm()` and `PI_cross_section()`, if `x<1.0` then cross section `alpha=0.`
@@ -90,8 +94,8 @@ def gaunt_factor_gingerich_cm_(ni : T_VEC_IA, w : T_VEC_FA) -> T_VEC_FA:
     .. [1] Gingerich, March 1964
     """
     # wavelength in ?
-    #w_um = w * 1E5
-    w_um = w * 1.E4
+    w_um = w * 1.E5     # [cm] -> [um] is *1.E4, why 1.E5
+    #w_um = w * 1.E4
 
     if ni == 1:
         C1, C2, C3 = 0.9916, 9.068E-3, -0.2524
