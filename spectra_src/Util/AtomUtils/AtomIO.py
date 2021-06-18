@@ -3,6 +3,9 @@
 # definition of functions for creating Atom struct
 #-------------------------------------------------------------------------------
 # VERSION
+# 0.1.2
+#    2021/06/16   u.k.
+#        - `atom.Line` now is a ndarray instead of a recarray
 # 0.1.1
 #    2021/06/07   u.k.
 #        - `Abun : T_FLOAT = _ElementUtil.sym_to_abun_( element )``
@@ -656,7 +659,8 @@ def make_Atom_Line_(path : T_UNION[T_STR,None], Level : T_ARRAY,
                           ('BIJ',T_FLOAT),           #: Einstein BIJ coefficient
                           ])
     nLine = len( Line_idx_table )
-    Line = _numpy.recarray(nLine, dtype=dtype)
+    #Line = _numpy.recarray(nLine, dtype=dtype)
+    Line = _numpy.zeros(nLine, dtype=dtype)
 
     # idxI and idxJ
     for k in range(nLine):

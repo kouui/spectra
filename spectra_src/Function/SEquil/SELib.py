@@ -4,6 +4,12 @@
 # definition of functions to perform statistical equilibrium
 #-------------------------------------------------------------------------------
 # VERSION
+# 0.1.1
+#    2021/06/15   u.k.
+#        - func _bf_R_rate_ : move if of use_Tr outside of doppler_shift_continuum
+#          to enable `Tr=0., use_Tr=True` of Coronal Equil.
+#        - func _bf_R_rate_ : add local variable `PI_I0` to prevent the update of
+#          `PI_I` udring simulation
 # 0.1.0 
 #    2021/05/18   u.k.   spectra-re
 # 0.0.3
@@ -321,11 +327,19 @@ def _bf_R_rate_(Cont : T_ARRAY, Cont_mesh : T_ARRAY, Te : T_FLOAT,
                 use_Tr : T_BOOL, doppler_shift_continuum : T_BOOL,
                 ) -> T_TUPLE[T_ARRAY,T_ARRAY,T_ARRAY]:
 
-    if doppler_shift_continuum:
-        if use_Tr:
-            PI_I[:,:] = _LTELib.planck_cm_(Cont_mesh[:,:], Tr)
+    if use_Tr:
+        PI_I0 = _LTELib.planck_cm_(Cont_mesh[:,:], Tr)
+    else:
+        if doppler_shift_continuum:
+            PI_I0 = _PhotoIonize.interpolate_PI_intensity_(backRad[:,:], Cont_mesh[:,:])
+
         else:
-            PI_I[:,:] = _PhotoIonize.interpolate_PI_intensity_(backRad[:,:], Cont_mesh[:,:])
+            PI_I0 = PI_I[:,:]
+#    if doppler_shift_continuum:
+#        if use_Tr:
+#            PI_I[:,:] = _LTELib.planck_cm_(Cont_mesh[:,:], Tr)
+#        else:
+#            PI_I[:,:] = _PhotoIonize.interpolate_PI_intensity_(backRad[:,:], Cont_mesh[:,:])
     
     #-------------------------------------------------------------------------
     # we compute/interpolate photoionizatoin cross section only once
@@ -343,7 +357,7 @@ def _bf_R_rate_(Cont : T_ARRAY, Cont_mesh : T_ARRAY, Te : T_FLOAT,
     for kL in range(nCont):
         res = _PhotoIonize.bound_free_radiative_transition_coefficient_(
                                 wave = Cont_mesh[kL,::-1],
-                                J = PI_I[kL,::-1],
+                                J = PI_I0[kL,::-1],
                                 alpha = alpha_interp[kL,::-1],
                                 Te = Te,
                                 nk_by_ni_LTE=nj_by_ni_Cont[kL])

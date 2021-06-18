@@ -67,9 +67,9 @@ C0_          : T_FLOAT = 5.465366   * 1.E-11
 # constants for notations  # need modification
 #-------------------------------------------------------------------------------
 
-L_s2i        : T_DICT[T_STR,T_INT] = { "S" : 0, "P" : 1, "D" : 2, "F" : 3, "G" : 4, "H" : 5, "I" : 6 }
+L_s2i_        : T_DICT[T_STR,T_INT] = { "S" : 0, "P" : 1, "D" : 2, "F" : 3, "G" : 4, "H" : 5, "I" : 6 }
 """a hash dictionary mapping symbolic quantum number L to its integer value
 """
-L_i2s        : T_DICT[T_INT,T_STR] = { 0 : "S", 1 : "P", 2 : "D", 3 : "F", 4 : "G", 5 : "H", 6 : "I" }
+L_i2s_        : T_DICT[T_INT,T_STR] = { 0 : "S", 1 : "P", 2 : "D", 3 : "F", 4 : "G", 5 : "H", 6 : "I" }
 """a hash dictionary mapping integer value to its symbolic quantum number L
 """
