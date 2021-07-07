@@ -3,6 +3,8 @@
 # definition of struct for storing Statistical Equilibrium result
 #-------------------------------------------------------------------------------
 # VERSION
+# 0.1.1
+#    2021/07/04   u.k.   added Rmat, Cmat to TranRates_Container
 # 0.1.0 
 #    2021/05/18   u.k.   spectra-re
 #-------------------------------------------------------------------------------
@@ -43,4 +45,7 @@ class TranRates_Container:
 
     Cji_Ne               : T_ARRAY # 1d (nLine+nCont), [/s]
     Cij_Ne               : T_ARRAY # 1d (nLine+nCont), [/s]
+
+    Rmat                 : T_ARRAY # 2d (nLevel, nLevel), [/s]
+    Cmat                 : T_ARRAY # 2d (nLevel, nLevel), [/s]
 

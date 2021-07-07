@@ -4,6 +4,9 @@
 # definition of functions to perform statistical equilibrium
 #-------------------------------------------------------------------------------
 # VERSION
+# 0.1.2
+#    2021/07/04   u.k.
+#        - tran_rate_con now has Rmat, Cmat
 # 0.1.1
 #    2021/06/15   u.k.
 #        - func _bf_R_rate_ : move if of use_Tr outside of doppler_shift_continuum
@@ -220,7 +223,7 @@ def cal_SE_(atom : _Atom.Atom, atmos : _Atmosphere.Atmosphere0D,
         Aji[:], Bji_Jbar[:], Bij_Jbar[:], 
         Rki_spon[:], Rki_stim[:], Rik[:]
         )
-    n_SE = _solve_SE_( 
+    n_SE, Rmat, Cmat = _solve_SE_( 
         nLevel, idxI[:], idxJ[:], 
         Rji_spon[:], Rji_stim[:], Rij[:], 
         Cji[:], Cij[:], Ne
@@ -242,6 +245,8 @@ def cal_SE_(atom : _Atom.Atom, atmos : _Atmosphere.Atmosphere0D,
         Rij=Rij[:],
         Cji_Ne = Cji[:] * Ne,
         Cij_Ne = Cij[:] * Ne,
+        Rmat = Rmat,
+        Cmat = Cmat,
     )
 
     return SE_con, tran_rate_con
@@ -520,7 +525,7 @@ def _make_Rji_Rij_(Aji : T_ARRAY, Bji_Jbar : T_ARRAY, Bij_Jbar : T_ARRAY,
 
 def _solve_SE_(nLevel : T_INT, idxI : T_ARRAY, idxJ : T_ARRAY, 
                Rji_spon : T_ARRAY, Rji_stim : T_ARRAY, Rij : T_ARRAY,
-               Cji : T_ARRAY, Cij : T_ARRAY, Ne : T_FLOAT) -> T_ARRAY :
+               Cji : T_ARRAY, Cij : T_ARRAY, Ne : T_FLOAT) -> T_TUPLE[T_ARRAY,T_ARRAY,T_ARRAY] :
 
     Cmat = _numpy.zeros((nLevel,nLevel), dtype=DT_NB_FLOAT)
     _SEsolver.set_matrixC_(Cmat[:,:],Cji[:],Cij[:],idxI[:],idxJ,Ne)
@@ -530,7 +535,7 @@ def _solve_SE_(nLevel : T_INT, idxI : T_ARRAY, idxJ : T_ARRAY,
 
     n_SE = _SEsolver.solve_SE_(Rmat, Cmat)
 
-    return n_SE
+    return n_SE, Rmat, Cmat
 
 
 
