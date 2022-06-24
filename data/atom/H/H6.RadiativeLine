@@ -1,0 +1,21 @@
+#-----------------------------------------------------------------------------
+nRadiative  10
+End
+#-----------------------------------------------------------------------------
+prefix  -
+#   conf_i    term_i    J_i     conf_j    term_j    J_j    Emission    Nlambda    BackWidth[cm/s]    Fixed    qcore    qwing    filename
+# Lyman series
+    1s        2S        1/2     2         -         -      Voigt       151        5.E+07             0        2.5       120      -
+    1s        2S        1/2     3         -         -      Voigt       101        5.E+07             0        2.5       120      -
+    1s        2S        1/2     4         -         -      Voigt       101        5.E+07             0        2.5       120      -
+    1s        2S        1/2     5         -         -      Voigt       101        5.E+07             0        2.5       120      -
+# Balmer series
+    2         -         -       3         -         -      Voigt       151        5.E+07             0        2.5       120      -
+    2         -         -       4         -         -      Voigt       151        5.E+07             0        2.5       120      -
+    2         -         -       5         -         -      Voigt       151        5.E+07             0        2.5       120      -
+# Paschen series
+    3         -         -       4         -         -      Voigt       41         5.E+07             0        2.5       120      -
+    3         -         -       5         -         -      Voigt       41         5.E+07             0        2.5       120      -
+# Brackett series
+    4         -         -       5         -         -      Voigt       41         5.E+07             0        2.5       120      -
+End
