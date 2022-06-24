@@ -32,6 +32,6 @@ $ pip install matplotlib sympy
 
 ## for jupyter notebook
 ## https://starpentagon.net/analytics/conda_env_jupyter_notebook/
-$ conda install -c conda-forge notebook ipykernel16:38
+$ conda install -c conda-forge notebook ipykernel
 $ ipython kernel install --user --name spectra-py39
 

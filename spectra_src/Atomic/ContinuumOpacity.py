@@ -10,6 +10,9 @@
 # 0.1.0 
 #    2021/05/18   u.k.   spectra-re
 #        -  migrated from opacity.py
+# 0.1.1
+#    2022/01/07   u.k.   
+#        -  removed warnings and added JIT for `HI_rayleigh_cross_sec_`
 #-------------------------------------------------------------------------------
 # WARNING
 # 1. wait to solve the mypy bug, Union type in to an overload function
@@ -213,8 +216,8 @@ def HI_bf_LTE_cross_sec_(Te : T_VEC_IFA, w : T_VEC_IFA) -> T_VEC_FA:
 
     .. [2] Robert J. Rutten, "Radiative Transfer in Stellar Atmosphere", 2003.
     """
-    if Te > 2E4:
-        WARN_("partition function of HI is assumed to be 2.0, which is only valid for T < 2E4 [K]")
+    #if Te > 2E4:
+    #    WARN_("partition function of HI is assumed to be 2.0, which is only valid for T < 2E4 [K]")
         #raise ValueError("partition function of HI is assumed to be 2.0, which is only valid for T < 2E4 [K]")
 
     n_limit = int( _sqrt( w / CST.ni2cm_ ) ) + 1  # CST.ni2cm_ ~ 9.1126E-6  (ichimoto's value : 9.1176E-6 ? ) 
@@ -268,8 +271,8 @@ def Hp_ff_cross_sec_(Te : T_ARRAY, w : T_FLOAT, Ne : T_ARRAY, Z : T_INT = 1) -> 
 
 def Hp_ff_cross_sec_(Te : T_VEC_FA, w : T_VEC_FA, Ne : T_VEC_FA, Z : T_INT = 1) -> T_VEC_FA :
 
-    if Te > 2E4:
-        WARN_("partition function of HI is assumed to be 2.0, which is only valid for T < 2E4 [K]")
+    #if Te > 2E4:
+        #WARN_("partition function of HI is assumed to be 2.0, which is only valid for T < 2E4 [K]")
         #raise ValueError("partition function of HI is assumed to be 2.0, which is only valid for T < 2E4 [K]")
     
     kT = CST.k_ * Te
@@ -346,8 +349,8 @@ def HI_ff_cross_sec_(Te : T_VEC_IFA, w : T_VEC_IFA) -> T_VEC_FA:
            normal stellar atmosphere"  MIT press
 
     """
-    if Te > 2E4:
-        WARN_("partition function of HI is assumed to be 2.0, which is only valid for T < 2E4 [K]")
+    #if Te > 2E4:
+    #    WARN_("partition function of HI is assumed to be 2.0, which is only valid for T < 2E4 [K]")
         #raise ValueError("partition function of HI is assumed to be 2.0, which is only valid for T < 2E4 [K]")
 
     kT = CST.k_ * Te
@@ -763,7 +766,7 @@ def H_LTE_continuum_opacity_(Te : T_VEC_FA, Ne : T_VEC_FA, Nh : T_VEC_FA,  w : T
              H2p_cross_sec_(Te, w, Np) + # type: ignore
              HI_rayleigh_cross_sec_(w) # type: ignore
              )
-    kappa += Np * Hp_ff_cross_sec_(Te, w, Ne) # type: ignore
+    kappa += Np * Hp_ff_cross_sec_(Te, w, Ne, 1) # type: ignore
     kappa += thomson_scattering_(Ne) # type: ignore
 
     return kappa
@@ -775,9 +778,11 @@ def H_LTE_continuum_opacity_(Te : T_VEC_FA, Ne : T_VEC_FA, Nh : T_VEC_FA,  w : T
 if CFG._IS_JIT:
 
     thomson_scattering_ = nb_vec(**NB_VEC_KWGS) (thomson_scattering_)
+    HI_rayleigh_cross_sec_ = nb_vec(**NB_VEC_KWGS) (HI_rayleigh_cross_sec_)
 
     hydrogenic_bf_cross_sec_n_ = nb_vec(**NB_VEC_KWGS) (hydrogenic_bf_cross_sec_n_)
     HI_bf_LTE_cross_sec_ = nb_vec(**NB_VEC_KWGS) (HI_bf_LTE_cross_sec_)
+    gaunt_factor_ff_ = nb_vec(**NB_VEC_KWGS) (gaunt_factor_ff_)
     Hp_ff_cross_sec_ = nb_vec(**NB_VEC_KWGS) (Hp_ff_cross_sec_)
     #HI_ff_cross_sec_ = nb_vec(**NB_VEC_KWGS) (HI_ff_cross_sec_)
     Hminus_cross_sec_= nb_vec(**NB_VEC_KWGS) (Hminus_cross_sec_)

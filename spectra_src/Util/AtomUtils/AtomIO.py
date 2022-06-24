@@ -441,8 +441,9 @@ def read_conf_(conf_path : T_STR) -> T_DICT[T_STR, T_UNION[None,T_STR]]:
         key : None for key in path_dict_keys
     }
 
-    i = conf_path.rfind('/')
-    folder = conf_path[:i+1]
+    #i = conf_path.rfind('/')
+    #folder = conf_path[:i+1]
+    folder = os.path.dirname( conf_path )
     path_dict["conf"] = os.path.abspath( conf_path )
 
     with open(conf_path, "r") as f:

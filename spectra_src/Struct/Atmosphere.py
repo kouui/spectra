@@ -5,6 +5,9 @@
 # VERSION
 # 0.1.0 
 #    2021/05/18   u.k.   spectra-re
+# 0.1.1
+#    2022/01/07   u.k.   
+#        - in `init_VAL_`, added zero array of `column_mass` to initialize struct
 #-------------------------------------------------------------------------------
 
 
@@ -48,6 +51,7 @@ class AtmosphereC1D:
     Z  : T_ARRAY            # height of the atmosphere
 
     tau5 : T_ARRAY          # (integrated) optical depth at 500nm at each depth point
+    column_mass : T_ARRAY   # column mass
 
     is_uniform : T_BOOL
     ndim : T_INT     = 1
@@ -232,11 +236,14 @@ def init_VAL_( val_type : T_STR = "C" ) -> AtmosphereC1D:
         Vt = Vt,
         Z  = Z,
         tau5 = tau5,
+        column_mass = _numpy.zeros_like(tau5),
         is_uniform = False,
-        ndim = 1
+        ndim = 1,
+#        column_mass = _numpy.zeros_like( Vt ),
     )
 
     return atmos
+
 
 
 
