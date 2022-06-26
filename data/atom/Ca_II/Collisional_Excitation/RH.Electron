@@ -5,6 +5,8 @@
 #       CRC -> Collision Rate Coefficient
 # Effective Collision Strengths (Omega_ij[-]) : RH/Atoms_example/CaII.atom
 # Collision Rate : n_e * C_ij = n_e * ( 8.63e-6 * (Omega_ij*f1/f2) ) / (g_i * T_e^0.5) * e^(-dE_ji / (k*T_e))
+#                             = n_e *        CE * T_e^0.5 * f1/f2                      * e^(-dE_ji / (k*T_e)) 
+#  --> Omega_ij = CE * T_e * g_i / 8.63E-6
 Type    ECS
 Temperature     3.00e+03    5.00e+03    7.00e+03    1.50e+04	5.00e+04	1.00e+05
 END
