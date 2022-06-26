@@ -38,7 +38,7 @@ def init_Radiation_(atmos : T_UNION[_Atmosphere.Atmosphere0D,_Atmosphere.Atmosph
 
     root=CFG._ROOT_DIR
 
-    backRad = _numpy.load(  os.path.join(root,"data/intensity/atlas/QS/atlas_QS/20220107.npy") )
+    backRad = _numpy.load(  os.path.join(root,"data","intensity","atlas","QS","atlas_QS.20220107.npy") )
     #backRad[0,:] *= 1E-8
     #backRad[1,:] *= 2.5*intensity_fac
     
