@@ -211,7 +211,7 @@ def make_Level_file_( levels: dict[int, LevelRH], tables: dict[int,LevelRecord],
 
     with open(outfile, 'w') as f:
         f.write(text_bar_() + '\n')
-        f.write(f"Title : {title}" + '\n')
+        f.write(f"Title: {title}" + '\n')
         f.write(text_bar_() + '\n')
         
         for key, val in zip(('Z','Element','nLevel'),(Elements.ELEMENT_DICT[sym]['Z'],sym,len(tables))):
@@ -245,7 +245,7 @@ def make_Level_file_( levels: dict[int, LevelRH], tables: dict[int,LevelRecord],
                     text += f'{v:<12d}'
                     continue
                 if isinstance(v, float): 
-                    text += f'{v:+.7E}'
+                    text += f'{v:+.12E}'
                     continue
                 raise TypeError(f"unsupported type(v)={type(v)}")
             f.write(text + '\n')
@@ -400,6 +400,8 @@ def make_RadiativeLine_file_( lines: list[LineRH],
             qcore    = rhline.qcore
             qwing    = rhline.qwing
             filename = 'tmp.dat'
+
+            if nlambda%2 == 0: nlambda += 1
 
             text = ' '*4
             text += f"{confi:<12s}"
@@ -839,9 +841,13 @@ def make_conf_file_( afiles:AtomFiles, outfile: str, outdir: str):
         afiles.Gro,
     )
     with open(outfile, 'w') as f:
+        count = 0
         for na, fna in zip( names, fnames ):
+            if count ==0: fna = fna.replace('\\', '\\\\')
+            if count > 0: fna = os.path.basename(fna)
             text = f"{na:<20s}{fna:<50s}"
-        f.write(text + '\n')
+            f.write(text + '\n')
+            count += 1
     return 0
 #-------------------------------------------------------------------
 # main function

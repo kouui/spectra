@@ -5,6 +5,8 @@
 # VERSION
 # 0.1.0 
 #    2021/05/18   u.k.   spectra-re
+# 0.1.1
+#    2022/06/26   u.k.   compute_Hydrogenic_PI_cross_section_
 #-------------------------------------------------------------------------------
 
 from ...ImportAll import *
@@ -12,8 +14,6 @@ from ...Atomic import Hydrogen as _Hydrogen
 
 import numpy as _numpy
 
-
-_Hydrogen.ratio_Etran_to_Eionize_
 
 def ratio_Etran_to_Eionize_( ni_arr : T_ARRAY, wave_arr : T_ARRAY ) -> T_ARRAY:
     
@@ -31,6 +31,7 @@ def ratio_Etran_to_Eionize_( ni_arr : T_ARRAY, wave_arr : T_ARRAY ) -> T_ARRAY:
 
 def compute_PI_cross_section_(ni : T_ARRAY, meshCont : T_ARRAY) -> T_ARRAY:
 
+
     ## compute ratio of the transition energy to ionization energy
     Eratio = ratio_Etran_to_Eionize_(ni[:], meshCont[::])
     
@@ -40,7 +41,15 @@ def compute_PI_cross_section_(ni : T_ARRAY, meshCont : T_ARRAY) -> T_ARRAY:
 
     return PI_alpha
 
-
+def compute_Hydrogenic_PI_cross_section_(z:T_INT, ni:T_INT, Eionize:T_FLOAT, meshCont:T_ARRAY):
+    r"""
+    z : nuclear net electric charge
+    """
+    assert meshCont.ndim==1
+    E_tran =  CST.h_ * CST.c_ / meshCont[:]
+    Eratio = E_tran / Eionize
+    PI_alpha = _Hydrogen.PI_cross_section_(ni, Eratio, z)
+    return PI_alpha
 
 
 

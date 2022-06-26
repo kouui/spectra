@@ -134,10 +134,10 @@ def init_Atom_(conf_path : T_STR, is_hydrogen : T_BOOL = False
     path_dict : T_DICT[T_STR, T_UNION[None,T_STR]]
         a dictionary of the path of data files
     """
+
     # path dict
     #--------------------
     path_dict = _AtomIO.read_conf_(conf_path)
-
     _atom_type : T_E_ATOM
     if is_hydrogen:
         _atom_type = E_ATOM.HYDROGEN
@@ -150,7 +150,6 @@ def init_Atom_(conf_path : T_STR, is_hydrogen : T_BOOL = False
         raise ValueError("Lack of .Level file")
         
     Z, Mass, Abun, nLevel, Level, Level_info_table = _AtomIO.make_Atom_Level_(path_dict["Level"])
-
     # nTran nLine nCont
     #--------------------
     nLine, nCont, nTran, _has_continuum = _AtomIO.nLine_nCont_nTran_( Level["stage"] )
@@ -173,7 +172,6 @@ def init_Atom_(conf_path : T_STR, is_hydrogen : T_BOOL = False
     #--------------------
     Line, data_source_Aji = \
         _AtomIO.make_Atom_Line_(path_dict["Aji"], Level,Line_idx_table,Line_ctj_table,_atom_type)
-    
     # read CE
     #--------------------
     Te_table, Omega_table, Coe, _transition_type, _transition_source, _transition_formula = \

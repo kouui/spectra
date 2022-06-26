@@ -11,6 +11,8 @@
 #        - `Abun : T_FLOAT = _ElementUtil.sym_to_abun_( element )``
 # 0.1.0 
 #    2021/05/18   u.k.   spectra-re
+# 0.1.1
+#    2022/06/26   u.k.   data & Hydrogenic mixed photoionization cross section 
 #-------------------------------------------------------------------------------
 
 from ...ImportAll import *
@@ -304,13 +306,13 @@ def read_PI_info_(lns : T_LIST[T_STR]) -> T_TUPLE[T_INT,T_INT]:
 
     return nCont, re#, _nMesh
 
-def read_PI_table_(rs : T_INT, lns : T_LIST[T_STR], PI_table_dict : T_DICT[T_INT,T_ARRAY], 
+def read_PI_table_(rs : T_INT, lns : T_LIST[T_STR], PI_table_dict : T_DICT[T_INT,T_ARRAY], PI_wdep_dict : T_DICT[T_INT,T_STR],
                    PI_coe : T_ARRAY, level_info_table : T_CTJ_TABLE, cont_ctj_table : T_CTJ_PAIR_TABLE):
     """read PI table for interpolation
     """
     countMesh = 0
     readMesh = False
-
+    PI_wdep_dict.clear()
     #_prefix = ''
     for i, ln in enumerate(lns[rs:]):
 
@@ -345,12 +347,22 @@ def read_PI_table_(rs : T_INT, lns : T_LIST[T_STR], PI_table_dict : T_DICT[T_INT
                 PI_coe["idxJ"][contIndex] = level_info_table.index( ctj_ij[1] )
 
                 nLambda = int(words[6])
+                wavedep = words[7]
+                if wavedep == 'Hydrogenic':
+                    nLambda = 0
+
                 PI_coe["nLambda"][contIndex] = nLambda
                 PI_coe["alpha0"][contIndex] = float(words[8])
 
                 readMesh = True
                 countMesh = 0
                 mesh_array = _numpy.zeros((2,nLambda),T_FLOAT)
+                
+                if wavedep == 'Hydrogenic': 
+                    readMesh = False
+                    PI_table_dict[contIndex] = mesh_array
+                    PI_wdep_dict[contIndex]  = wavedep
+                    continue
             else:
                 readMesh = False
 
@@ -362,6 +374,7 @@ def read_PI_table_(rs : T_INT, lns : T_LIST[T_STR], PI_table_dict : T_DICT[T_INT
 
             if countMesh == (nLambda-1):
                 PI_table_dict[contIndex] = mesh_array
+                PI_wdep_dict[contIndex]  = wavedep
 
             countMesh += 1
 
@@ -684,7 +697,6 @@ def make_Atom_Line_(path : T_UNION[T_STR,None], Level : T_ARRAY,
             Line["AJI"][:] = _Hydrogen.einstein_A_coefficient_(Line['ni'][:], Line['nj'][:])
         else:
             raise ValueError("We don't have function to calculate Aji for non-hydrogen atoms")
-
     # calculate f0, w0, w0_AA
     for k in range(nLine):
         i : int = Line["idxI"][k]
@@ -829,10 +841,11 @@ def make_Atom_RL_(path : T_UNION[T_STR, None],
     return Coe, nRadiativeLine
 
 def make_Atom_PI_(path : T_UNION[T_STR, None], Level : T_ARRAY, Cont : T_ARRAY, Cont_mesh : T_ARRAY, 
-        atom_type : T_E_ATOM, Level_info_table : T_CTJ_TABLE, Cont_ctj_table : T_CTJ_PAIR_TABLE
-        ) -> T_TUPLE[T_ARRAY,T_ARRAY,T_ARRAY,T_ARRAY, T_E_ATOMIC_DATA_SOURCE]:
+        atom_type : T_E_ATOM, Level_info_table : T_CTJ_TABLE, Cont_ctj_table : T_CTJ_PAIR_TABLE,
+        z:T_INT=1) -> T_TUPLE[T_ARRAY,T_ARRAY,T_ARRAY,T_ARRAY, T_E_ATOMIC_DATA_SOURCE]:
 
     nCont = Cont.shape[0]
+    nContMesh = Cont_mesh.shape[1]
     dtype  = _numpy.dtype([
                             ('idxI',T_INT),        #: level index, the Level index of lower level
                             ('idxJ',T_INT),        #: level index, the Level index of upper level
@@ -881,11 +894,12 @@ def make_Atom_PI_(path : T_UNION[T_STR, None], Level : T_ARRAY, Cont : T_ARRAY, 
             raise ValueError( "incompatible nCont from `Cont` and `read_PI_info_`" )
 
         alpha_table_dict : T_DICT[T_INT,T_ARRAY] = _OrderedDict()
-        
+        PI_wdep_dict : T_DICT[T_INT,T_STR] = _OrderedDict()
     
 
         read_PI_table_(rs=rs, lns=fLines,
                        PI_table_dict = alpha_table_dict,
+                       PI_wdep_dict = PI_wdep_dict,
                        PI_coe = Coe,
                        level_info_table=Level_info_table,
                        cont_ctj_table=Cont_ctj_table)
@@ -897,20 +911,33 @@ def make_Atom_PI_(path : T_UNION[T_STR, None], Level : T_ARRAY, Cont : T_ARRAY, 
 
         n_total_mesh_length = 0
         for i, key in enumerate(sorted_keys):
-            n_total_mesh_length += alpha_table_dict[key].shape[1]
+            if PI_wdep_dict[key] == 'Hydrogenic':
+                n_total_mesh_length += nContMesh
+            else:
+                n_total_mesh_length += alpha_table_dict[key].shape[1]
 
         alpha_table = _numpy.empty((2,n_total_mesh_length), dtype=DT_NB_FLOAT)
         alpha_table_idxs = _numpy.empty( (nCont,2), dtype=DT_NB_INT )
         bias = 0
         for i, key in enumerate(sorted_keys):
-            arr2d : T_ARRAY = alpha_table_dict[key]
             alpha_table_idxs[i,0] = bias
-            alpha_table_idxs[i,1] = alpha_table_idxs[i,0] + arr2d.shape[1]
-            bias = alpha_table_idxs[i,1]
+            if PI_wdep_dict[key] == 'Hydrogenic': 
+                arr2d = _numpy.zeros((2,nContMesh),T_FLOAT)
+                alpha_table_idxs[i,1] = alpha_table_idxs[i,0] + nContMesh
+                bias = alpha_table_idxs[i,1]
+                arr2d[0,:] = Cont_mesh[i,:]
+                from ...Function.Hydrogen import DegenerateN as _DegenerateN
+                Eionize = Level["erg"][Coe["idxJ"][i]] - Level["erg"][Coe["idxI"][i]]
+                z = Level["stage"][Coe["idxI"][i]]
+                ni = Level["n"][Coe["idxI"][i]]
+                arr2d[1,:] = _DegenerateN.compute_Hydrogenic_PI_cross_section_(z, ni, Eionize, Cont_mesh[i,:])
+            else:
+                arr2d = alpha_table_dict[key]
+                alpha_table_idxs[i,1] = alpha_table_idxs[i,0] + arr2d.shape[1]
+                bias = alpha_table_idxs[i,1]
 
-            arr2d[0,:] *= 1.E-7 # unit conversion of wavelength, nm --> cm   (cm, cm^2)
+                arr2d[0,:] *= 1.E-7 # unit conversion of wavelength, nm --> cm   (cm, cm^2)
             arr2d[0,:] += Cont["w0"][i] - arr2d[0,0] # shift edge wavelength to the computed wavelength w0
-
             alpha_table[:, alpha_table_idxs[i,0] : alpha_table_idxs[i,1] ] = arr2d[:,:]
 
         for k in range(nCont):
