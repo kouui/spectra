@@ -5,6 +5,7 @@
 # VERSION
 # 0.1.0 
 #    2021/05/18   u.k.   spectra-re
+#    2022/07/20   k.i.   add Src, tau_1D
 #-------------------------------------------------------------------------------
 
 from typing import Container
@@ -51,6 +52,7 @@ def SE_to_slab_0D_(atom : _Atom.Atom, atmos : _Atmosphere.Atmosphere0D,
     arr_tau_max   = _numpy.empty(nLine, dtype=DT_NB_FLOAT)
     arr_Ibar      = _numpy.empty(nLine, dtype=DT_NB_FLOAT)
     arr_prof_1D   = _numpy.empty_like( absorb_prof_1d )
+    arr_tau_1D    = _numpy.empty_like( absorb_prof_1d )
     #arr_wl_1D     = _numpy.empty_like( absorb_prof_1d )
     for k in range(0,nLine):
         i1 = Line_mesh_idxs[k,0]
@@ -68,11 +70,15 @@ def SE_to_slab_0D_(atom : _Atom.Atom, atmos : _Atmosphere.Atmosphere0D,
         arr_tau_max[k] = tau[:].max()
         arr_Ibar[k] = Ibar
         arr_prof_1D[i1:i2] = prof[:]
+        arr_tau_1D[i1:i2] = tau[:]
+
 
     cloud_con = _Container.CloudModel_Container(
         w0                 = arr_w0, 
         tau_max            = arr_tau_max, 
         Ibar               = arr_Ibar, 
+        Src                = Src, 
+        tau_1D             = arr_tau_1D,
         prof_1D            = arr_prof_1D,
         wl_1D              = wave_mesh_shifted_1d.copy(),
         Line_mesh_idxs     = Line_mesh_idxs.copy(),
