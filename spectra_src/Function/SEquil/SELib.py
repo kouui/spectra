@@ -31,6 +31,12 @@
 #          _meshInfo[3] = 2
 #          ```
 #        - in LevelN.collisional_broadening(), ground hydrogen population is set(fixed) to 1E10
+# 0.0.2
+#    2022/07/29   u.k
+#        - added cal_SE_with_Pg_Te_
+# 0.0.3
+#    2022/09/04   u.k.
+#        - added cal_SE_with_Pg_Te_single_Atom_
 #-------------------------------------------------------------------------------
 
 from ...ImportAll import *
@@ -43,8 +49,13 @@ from ...Atomic import SEsolver as _SEsolver
 from ...RadiativeTransfer import Profile as _Profile
 from ...Util import MeshUtil as _MeshUtil
 from ...Math import Integrate as _Integrate
-
+from ...Elements import TOTAL_ABUN as _TOTAL_ABUN
+from ...Elements import WEIGHTED_TOTAL_MASS as _WEIGHTED_TOTAL_MASS
+from ...Elements import ELEMENT_DICT as _ELEMENT_DICT
 import numpy as _numpy
+
+#from ...Struct.WavelengthMesh import _N_LINE_MESH, _LINE_MESH_QCORE, _LINE_MESH_QWING, _LINE_MESH_TYPE
+
 
 #-----------------------------------------------------------------------------
 # high level functions with struct as function argument
@@ -56,6 +67,92 @@ from ...Struct import WavelengthMesh as _WavelengthMesh
 from ...Struct import Radiation as _Radiation
 from ...Struct import Container as _Container
 
+def cal_SE_with_Pg_Te_single_Atom_(atom : _Atom.Atom, atmos : _Atmosphere.Atmosphere0D, 
+                       wMesh : _WavelengthMesh.Wavelength_Mesh, 
+                       radiation : _Radiation.Radiation):
+    Pg = atmos.Pg
+    Te = atmos.Te
+    Vt = atmos.Vt
+    kT = CST.k_ * Te
+
+    is_hydrogen = ( atom._atom_type ==  E_ATOM.HYDROGEN )
+
+    Ne2Ng = 0.5
+    Ne2Ng_prev = Ne2Ng
+    Nh_SE = None
+
+    Ng = Pg / ( 0.5 * atom.Mass * CST.mH_ * Vt*Vt + ( 1. + Ne2Ng ) * kT)
+    atmos.Ne = Ng * Ne2Ng
+
+    atmos.Nh = Ng if is_hydrogen else 0.0
+
+    while True:
+        SE_con, tran_rate_con = cal_SE_(atom, atmos, wMesh, radiation, Nh_SE)      
+        n_SE = SE_con.n_SE
+        Ne2Ng  = n_SE[-1] ##: without bubble effect
+        Ne_SE  = Ng * Ne2Ng
+        Ne_new = 0.5 * ( Ne_SE + atmos.Ne )
+        #print("ratio: ", Ne2Nh, Ne2Nh_prev)
+        if ( abs( Ne2Ng - Ne2Ng_prev ) / Ne2Ng_prev ) < 0.01:
+            atmos.Ne = Ne_new
+            break
+        else:
+            Ng = Pg / ( 0.5 * atom.Mass * CST.mH_ * Vt*Vt + ( 1. + Ne2Ng ) * kT)
+            atmos.Ne = Ne_new
+            Ne2Ng_prev = Ne2Ng
+
+        if is_hydrogen:
+            atmos.Nh =  Ng
+            Nh_SE = n_SE       
+    
+    atmos.Nh =  Ng
+    
+    return SE_con, tran_rate_con
+
+def cal_SE_with_Pg_Te_(atom : _Atom.Atom, atmos : _Atmosphere.Atmosphere0D, 
+                       wMesh : _WavelengthMesh.Wavelength_Mesh, 
+                       radiation : _Radiation.Radiation,
+                       Nh_SE : T_UNION[T_ARRAY, None],
+                       ) -> T_TUPLE[_Container.SE_Container,_Container.TranRates_Container] :
+    Pg = atmos.Pg
+    Te = atmos.Te
+    Vt = atmos.Vt
+    kT = CST.k_ * Te
+
+
+    is_hydrogen = ( atom._atom_type ==  E_ATOM.HYDROGEN )
+
+    Ne2Nh = 0.5
+    Ne2Nh_prev = Ne2Nh
+    if is_hydrogen:
+        atmos.Nh = Pg / ( 0.5 * _WEIGHTED_TOTAL_MASS * CST.mH_ * Vt*Vt + ( _TOTAL_ABUN + Ne2Nh ) * kT)
+        atmos.Ne = atmos.Nh * Ne2Nh
+        
+
+    while True:
+        #print(f"Ne2Nh={Ne2Nh}, Ne={atmos.Ne:.2E}")
+        SE_con, tran_rate_con = cal_SE_(atom, atmos, wMesh, radiation, Nh_SE)
+        n_SE = SE_con.n_SE
+
+        if is_hydrogen:
+            #print(f"{n_SE[0]:.2E}, {n_SE[-1]:.2E}")
+            Ne2Nh  = (n_SE[-1] + 1.E-4)  ##: bubble effect
+            Ne_SE  = atmos.Nh * Ne2Nh
+            Ne_new = Ne_SE#0.5 * ( Ne_SE + atmos.Ne )
+            #print("ratio: ", Ne2Nh, Ne2Nh_prev)
+            if ( abs( Ne2Nh - Ne2Nh_prev ) / Ne2Nh_prev ) < 0.01:
+                atmos.Ne = Ne_new
+                break
+            else:
+                atmos.Nh = Pg / ( 0.5 * _WEIGHTED_TOTAL_MASS * CST.mH_ * Vt*Vt + ( _TOTAL_ABUN + Ne2Nh ) * kT)
+                atmos.Ne = Ne_new
+                Ne2Nh_prev = Ne2Nh
+        else:
+            break
+
+
+    return SE_con, tran_rate_con
+
 def cal_SE_with_Nh_Te_(atom : _Atom.Atom, atmos : _Atmosphere.Atmosphere0D, 
                        wMesh : _WavelengthMesh.Wavelength_Mesh, 
                        radiation : _Radiation.Radiation,
@@ -66,13 +163,13 @@ def cal_SE_with_Nh_Te_(atom : _Atom.Atom, atmos : _Atmosphere.Atmosphere0D,
     Ne0      = 1.E-4 * Nh                # [/cm^{3}]
     if Nh_SE is None:
         atmos.Ne = 0.5 * Nh              # [/cm^{3}]
-    else:
-        atmos.Ne = Ne0 + Nh * Nh_SE[0]   # [/cm^{3}]
+    # else:
+    #     atmos.Ne = Ne0 + Nh * Nh_SE[-1]   # [/cm^{3}]
     
     is_hydrogen = ( atom._atom_type ==  E_ATOM.HYDROGEN )
     
     while True:
-        
+        #print(f"Ne={atmos.Ne:.2E}")
         SE_con, tran_rate_con = cal_SE_(atom, atmos, wMesh, radiation, Nh_SE)
         
         n_SE = SE_con.n_SE
@@ -80,7 +177,7 @@ def cal_SE_with_Nh_Te_(atom : _Atom.Atom, atmos : _Atmosphere.Atmosphere0D,
         if is_hydrogen:
             Ne_SE  = Ne0 + Nh * n_SE[-1]
             Ne_new = 0.5 * ( Ne_SE + atmos.Ne )
-            
+            #Ne_new = Ne_SE
             if ( abs( Ne_new - atmos.Ne ) / atmos.Ne ) < 0.01:
                 atmos.Ne = Ne_new
                 break
@@ -130,7 +227,9 @@ def cal_SE_(atom : _Atom.Atom, atmos : _Atmosphere.Atmosphere0D,
             radiation : _Radiation.Radiation,
             Nh_SE : T_UNION[T_ARRAY, None],
             ) -> T_TUPLE[_Container.SE_Container,_Container.TranRates_Container] :
-    
+    ##: TODO: instead of using background radiation in radiation struct
+    ##        use an updatable MeanIntensity struct for lines and PI_intensity
+
     ## : extract variable from structs
 
     Mass            = atom.Mass
@@ -379,6 +478,8 @@ def _B_Jbar_(Line : T_ARRAY, Line_mesh_Coe : T_ARRAY,
              Mass : T_FLOAT, atom_type : T_E_ATOM,
              backRad : T_ARRAY, Tr : T_FLOAT, use_Tr : T_BOOL,
              ) -> T_TUPLE[T_ARRAY,T_ARRAY,T_ARRAY,T_ARRAY,T_ARRAY]:
+    ##: TODO: add input argument for PRD correlation matrix and PRD/CRD binary indicator for lines
+    ##        this requires adding one more ProfileType called PRD
 
     nLine = Line.shape[0]
 
@@ -397,6 +498,7 @@ def _B_Jbar_(Line : T_ARRAY, Line_mesh_Coe : T_ARRAY,
         if atom_type == E_ATOM.HYDROGEN:
             gamma += _Hydrogen.collisional_broadening_Res_and_Van_(Line["ni"][k], Line["nj"][k], Nh_I_ground, Te)
             gamma += _Hydrogen.collisional_broadening_LinearStark_(Line["ni"][k], Line["nj"][k], Ne)
+        ##: TODO: how about the collisional broadening of non-hydrogen atom
         
         Bij = Line['BIJ'][k]
         Bji = Line['BJI'][k]
@@ -405,13 +507,19 @@ def _B_Jbar_(Line : T_ARRAY, Line_mesh_Coe : T_ARRAY,
         dopWidth_cm = _BasicP.doppler_width_(w0, Te, Vt, Mass)
 
         i_start, i_end = Line_mesh_idxs[k,:]
-        Line_mesh[i_start:i_end]
+        #Line_mesh[i_start:i_end]                                       ##: Line_mesh not used?
         proftype = Line_mesh_Coe["ProfileType"][k]
         nLambda  = Line_mesh_Coe["nLambda"][k]
         qcore    = Line_mesh_Coe["qcore"][k]
         qwing    = Line_mesh_Coe["qwing"][k]
-        # wm : wave mesh
+        
+        # wm : wave mesh [dop_width_cm] 
+        ## TODO : since we have already calculated line mesh in dopller width unit, 
+        #         this line could be replaced by 
+        #         wm = Line_mesh[i_start:i_end] 
         wm = _MeshUtil.make_full_line_mesh_( nLambda, qcore, qwing )
+
+        ##: in SE we re-caculate the wavelength mesh based on (Te, Vt, Vd)  
         if proftype == E_ABSORPTION_PROFILE_TYPE.VOIGT:
             dopWidth_hz = dopWidth_cm * f0 / w0
             a = gamma / ( 4. * CST.pi_ * dopWidth_hz )
@@ -423,11 +531,11 @@ def _B_Jbar_(Line : T_ARRAY, Line_mesh_Coe : T_ARRAY,
         else:
             raise ValueError("Only 'VOIGT' and 'GAUSSIAN' are valid E_ABSORPTION_PROFILE_TYPE")
         
-        absorb_prof_cm[:] = absorb_prof_cm[:] / dopWidth_cm # normalization
+        absorb_prof_cm[:] = absorb_prof_cm[:] / dopWidth_cm # normalization, now (absorb_prof_cm * wm_cm) sum to 1
         ## -> could save to `absorb_prof_cm_all` here
         absorb_prof_cm_all[i_start:i_end] = absorb_prof_cm[:]
 
-        wm_cm =  wm[:] * dopWidth_cm + w0
+        wm_cm =  wm[:] * dopWidth_cm + w0                              ##: in unit of [cm]
         wm_cm_shifted = wm_cm[:] + ( w0 * Vd / CST.c_ )
         ## -> could save to `wave_mesh_cm_shifted_all` here
         wave_mesh_cm_shifted_all[i_start:i_end] = wm_cm_shifted[:]
@@ -446,6 +554,9 @@ def _B_Jbar_(Line : T_ARRAY, Line_mesh_Coe : T_ARRAY,
 
         Bij_Jbar[k] = Bij * Jbar0
         Bji_Jbar[k] = Bji * Jbar0
+
+        ##: wMesh.Line.Line_mesh : symmetric wavelength mesh in [dop_width_cm], global, fixed
+        ##  wave_mesh_cm_shifted_all  : shifted wavelength mesh in [cm], dependes on local Te, Vt, Vd, 
 
     return Bij_Jbar, Bji_Jbar, wave_mesh_cm_shifted_all, absorb_prof_cm_all, Jbar_all 
 

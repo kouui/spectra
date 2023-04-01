@@ -10,6 +10,7 @@
 import numpy as np
 
 import matplotlib.pyplot as plt
+from matplotlib.colors import LogNorm
 
 def set_imshow_ticks_(axe, arr, axis, points=None, fmt='%1.3f', rot=0, fontsize=None):
     r"""
@@ -132,3 +133,81 @@ def axes_no_padding_(fig_kw={"figsize":(8,4),"dpi":100}, axe_kw={"ax1":[0,0,1,1]
 
     return fig, axe_dict
 
+
+def transition_heatmap0(atom, SE_con, Rate_con, vmin=None, vmax=None, klevel_max=None,cmap='cool',title_prefix='',figsize=(9,4)):
+    #SE_con = SE_He
+    #Rate_con = Rate_He
+    numeric_error=1E-17
+    if klevel_max is None: klevel_max = atom.nLevel
+    #klevel_max = 21
+    ctjs = [f"{ctj[1]} {ctj[2]}" for ctj in atom._ctj_table.Level[:klevel_max]]
+
+    tran_mat = {
+        "Radiative" : Rate_con.Rmat[:klevel_max,:klevel_max] * SE_con.n_SE[:klevel_max].reshape(1,-1),
+        "Collision" : Rate_con.Cmat[:klevel_max,:klevel_max] * SE_con.n_SE[:klevel_max].reshape(1,-1),
+    }
+
+    if vmin is None: vmin = min( [mat.min() for mat in tran_mat.values()] )
+    if vmax is None: vmax = max( [mat.max() for mat in tran_mat.values()] )
+    norm = LogNorm(vmin, vmax, clip=True)
+
+    fig, axs = plt.subplots(1,2, figsize=figsize, dpi=100, sharey=True)
+    
+    for ax, name in zip( axs, ("Radiative", "Collision") ):
+        im = ax.imshow( tran_mat[name] + numeric_error, origin="lower", cmap=cmap, norm=norm )
+        if name == "Radiative" and title_prefix != '':
+            ax.set_title(name+f" | {title_prefix}")
+        else:
+            ax.set_title(name)
+        ax.set_xticks([i for i in range(klevel_max)])
+        ax.set_xticklabels(ctjs, rotation=75, fontsize=8)
+        ax.set_yticks([i for i in range(klevel_max)])
+        ax.set_yticklabels(ctjs, rotation=0, fontsize=8)
+
+
+    # colorbar
+    cax = fig.add_axes([0.48, 0.15, 0.02, 0.7])
+    fig.colorbar( im, cax=cax, orientation='vertical')
+
+    plt.show()
+    return None
+
+
+def transition_heatmap(fig, axes0, n_SE, mat_dict, ctj_table_level, vmin=None, vmax=None,cmap='cool', title_prefix=''):
+    ## mat_dict = {  'Radiative':Rmat, 'Collision': Cmat  }
+    if isinstance(axes0,plt.Axes) : axes = (axes0,)
+    else: axes = axes0
+    assert len(axes) == len(mat_dict)
+    numeric_error=1E-17
+
+    ctjs = [f"{ctj[1]} {ctj[2]}" for ctj in ctj_table_level]
+    
+    tran_dict = {}
+    for k, v in mat_dict.items():
+        tran_dict[k] = v[:,:] * n_SE.reshape(1,-1) + numeric_error
+    
+    if vmin is None: vmin = mat.min()
+    if vmax is None: vmax = mat.max()
+    norm = LogNorm(vmin, vmax, clip=True)
+
+    #fig, axs = plt.subplots(1,1, figsize=figsize, dpi=100)
+    
+    for i, (ax, name) in enumerate(zip( axes, tran_dict.keys() )):
+        im = ax.imshow( tran_dict[name], origin="lower", cmap=cmap, norm=norm )
+        if i==0 and title_prefix != '':
+            ax.set_title(name+f" | {title_prefix}")
+        else:
+            ax.set_title(name)
+        ax.set_xticks([i for i in range(len(ctjs))])
+        ax.set_xticklabels(ctjs, rotation=75, fontsize=8)
+        ax.set_yticks([i for i in range(len(ctjs))])
+        ax.set_yticklabels(ctjs, rotation=0, fontsize=8)
+
+
+    # colorbar
+    #cax = fig.add_axes([0.48, 0.15, 0.02, 0.7])
+    cax = fig.add_axes([0.93, 0.2, 0.02, 0.6])
+    fig.colorbar( im, cax=cax, orientation='vertical')
+
+    #plt.show()
+    return None

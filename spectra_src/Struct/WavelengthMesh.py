@@ -69,7 +69,7 @@ def init_Wave_Mesh_(Cont : T_ARRAY, Line : T_ARRAY, RL_Coe : T_ARRAY) -> Wavelen
             Cont_Coe["w0"][k]   = Cont["w0"][k]
             Cont_Coe["nLambda"][k] = _N_CONT_MESH
 
-    ## : Line_mesh
+    ## : Line_mesh, only transition defined in RL will be considered
     nLine = Line.shape[0]
     n_total_line_mesh = 0
     i_RL : T_INT
@@ -80,6 +80,7 @@ def init_Wave_Mesh_(Cont : T_ARRAY, Line : T_ARRAY, RL_Coe : T_ARRAY) -> Wavelen
         except IndexError:
             i_RL = -1
         
+        ##: Line_mesh contains mesh for all lines
         if i_RL != -1:
             n_total_line_mesh += RL_Coe["nLambda"][i_RL]
         else:

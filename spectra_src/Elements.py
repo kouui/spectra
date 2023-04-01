@@ -5,6 +5,8 @@
 # VERSION
 # 0.1.0 
 #    2021/05/18   u.k.   spectra-re
+# 0.1.1
+#    2022/07/29   u.k.   WEIGHTED_TOTAL_MASS TOTAL_ABUN
 #-------------------------------------------------------------------------------
 
 from .Types import *
@@ -88,6 +90,17 @@ ELEMENT_MASS    = tuple( ( val["Mass"] for key, val in ELEMENT_DICT.items() ) )
 ELEMENT_ABUN    = tuple( ( val["Abundance"] for key, val in ELEMENT_DICT.items() ) )
 # in unit of [eV]
 ELEMENT_IONIZPOTENTIAL    = tuple( ( _numpy.array(val["IonizeEV"], dtype=DT_NB_FLOAT) for key, val in ELEMENT_DICT.items() ) )
+
+WEIGHTED_TOTAL_MASS =  0.0
+TOTAL_ABUN = 0.0
+for key, val in ELEMENT_DICT.items():
+    abun = 10.**(val["Abundance"]-12.0)
+    mass = val["Mass"]
+    #print(key, abun * mass)
+    WEIGHTED_TOTAL_MASS += abun * mass
+    TOTAL_ABUN          += abun
+#WEIGHTED_TOTAL_MASS /= TOTAL_ABUN    ##: since we use hydrogen mass as unit, this normalization is unecessary
+#print(f"TOTAL_ABUN = {TOTAL_ABUN}")
 
 
 

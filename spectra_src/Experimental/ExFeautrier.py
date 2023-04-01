@@ -245,10 +245,10 @@ def formal_improved_RH_(tau, S, mu, r0=0, h0=0, rn=0, hn=0):
         mu: (,), mu=cos(theta)
         r0: (,), 0 or 1
         h0: (,), incident intensity at upper boundary
-        <upper boundary condition: I_upper(-)= r0*I_lower(+)+ h0,   at tau[0]>
+        <upper boundary condition: I_upper(-)= r0*I_upper(+)+ h0,   at tau[0]>
         rn: (,), 0 or 1
         hn: (,), incident intensity at lower boundary
-        <lower boundary condition: I_lower(+)= rn*I_upper(-)+ hn,   at tau[nd-1]>
+        <lower boundary condition: I_lower(+)= rn*I_lower(-)+ hn,   at tau[nd-1]>
 
     Output :
         j: (ND,), 0.5*(I(+) + I(-)) at each optical depth, mean intensity like

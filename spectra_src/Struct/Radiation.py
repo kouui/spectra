@@ -8,6 +8,8 @@
 #    2021/05/18   u.k.   spectra-re
 # 0.1.1
 #    2022/01/07   u.k.   modified atlas(backRad)
+# 0.1.2
+#    2022/08/01   u.k.   modified atlas(added 10000-11000A absorption lines into backRad)
 #-------------------------------------------------------------------------------
 
 
@@ -38,7 +40,7 @@ def init_Radiation_(atmos : T_UNION[_Atmosphere.Atmosphere0D,_Atmosphere.Atmosph
 
     root=CFG._ROOT_DIR
 
-    backRad = _numpy.load(  os.path.join(root,"data","intensity","atlas","QS","atlas_QS.20220107.npy") )
+    backRad = _numpy.load(  os.path.join(root,"data","intensity","atlas","QS","atlas_QS.20221118.npy") )
     #backRad[0,:] *= 1E-8
     #backRad[1,:] *= 2.5*intensity_fac
     

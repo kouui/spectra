@@ -8,6 +8,9 @@
 #          now we are able to reproduce ichimoto's LTE transfer result
 # 0.1.0 
 #    2021/05/18   u.k.   spectra-re
+# 0.1.1
+#    2022/01/07   u.k.   
+#        - added vectorization for `population_to_H_` when JIT applied
 #-------------------------------------------------------------------------------
 
 from ..ImportAll import *
@@ -299,7 +302,7 @@ def line_prof_lte_(atmos : _Atmosphere.AtmosphereC1D, line : _Line.Line,
 
 if CFG._IS_JIT:
 
-    pass
+    population_to_H_    = np_vec(population_to_H_, **NP_VEC_KWGS)
 
 else:
     population_to_H_    = np_vec(population_to_H_, **NP_VEC_KWGS)

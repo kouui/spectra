@@ -161,4 +161,7 @@ temp/
 # useless
 useless/
 
+# third party libraries
+ThirdParty/ExternalModules
+
 

@@ -8,6 +8,9 @@
 # 0.1.1
 #    2022/01/07   u.k.   
 #        - in `init_VAL_`, added zero array of `column_mass` to initialize struct
+# 0.1.2
+#    2022/07/29   u.k
+#        - added Pg to Atmosphere0D
 #-------------------------------------------------------------------------------
 
 
@@ -33,6 +36,8 @@ class Atmosphere0D:
 
     Tr : T_FLOAT     = 6.E3
     use_Tr : T_BOOL  = False
+
+    Pg : T_FLOAT     = 0.05   ##: [Ba] = 0.1 [Pa]
 
     doppler_shift_continuum : T_BOOL = False
 
