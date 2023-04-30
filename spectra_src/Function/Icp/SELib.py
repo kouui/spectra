@@ -37,9 +37,13 @@
 # 0.0.3
 #    2022/09/04   u.k.
 #        - added cal_SE_with_Pg_Te_single_Atom_
+# 0.0.4
+#    2023/04/01   u.k.
+#        - migrated from SEquil to add functionality for ion temperature and fixed ionization ratio
 # 0.1.0
-#    2023/04/29   u.k.
-#        - is_single_element keyword in cal_SE_with_Ne_Te_
+#    2023/04/06   u.k.
+#        - allow neutral atom calculation. added cal_SE_with_Pg_Te_Ne_single_Atom_ for
+#          calculation of icp neutral atom with specific Ne
 #-------------------------------------------------------------------------------
 
 from ...ImportAll import *
@@ -56,6 +60,9 @@ from ...Elements import TOTAL_ABUN as _TOTAL_ABUN
 from ...Elements import WEIGHTED_TOTAL_MASS as _WEIGHTED_TOTAL_MASS
 from ...Elements import ELEMENT_DICT as _ELEMENT_DICT
 import numpy as _numpy
+from scipy.linalg import solve as _sp_solve
+from scipy.optimize import minimize as _sp_minimize
+from scipy.optimize import least_squares as _sp_least_squares
 
 #from ...Struct.WavelengthMesh import _N_LINE_MESH, _LINE_MESH_QCORE, _LINE_MESH_QWING, _LINE_MESH_TYPE
 
@@ -70,38 +77,96 @@ from ...Struct import WavelengthMesh as _WavelengthMesh
 from ...Struct import Radiation as _Radiation
 from ...Struct import Container as _Container
 
-def cal_SE_with_Pg_Te_single_Atom_(atom : _Atom.Atom, atmos : _Atmosphere.Atmosphere0D, 
+def cal_SE_with_Pg_Te_Ne_single_Atom_(atom : _Atom.Atom, atmos : _Atmosphere.Atmosphere0D, 
                        wMesh : _WavelengthMesh.Wavelength_Mesh, 
-                       radiation : _Radiation.Radiation):
+                       radiation : _Radiation.Radiation,
+                       stage_pop: T_UNION[T_ARRAY, None],
+                       rate_only: T_BOOL = False):
+
+    if atmos.Ne < 1.0: raise ValueError(f"must provide Ne > 0")
+    
     Pg = atmos.Pg
     Te = atmos.Te
     Vt = atmos.Vt
-    kT = CST.k_ * Te
+    kTe = CST.k_ * Te
+    Ti = atmos.Ti
+    kTi = kTe if Ti < 0 else CST.k_ * Ti
 
     is_hydrogen = ( atom._atom_type ==  E_ATOM.HYDROGEN )
 
-    Ne2Ng = 0.1
+    # if stage_pop is None: Ne2Ng = 0.5
+    # else: 
+    #     Ne2Ng = 0.0
+    #     for i in range(1,stage_pop.shape[0]):
+    #         Ne2Ng += stage_pop[i] * i
+    #     Ne2Ng /= stage_pop.sum()
+    # Ne2Ng_prev = Ne2Ng
+    Nh_SE = None
+
+    # ICP only measures the ion pressure
+    Ng = Pg / ( 0.5 * atom.Mass * CST.mH_ * Vt*Vt + kTi)# + Ne2Ng * kTe)
+    #atmos.Ne = Ng * Ne2Ng
+    Ne2Ng = atmos.Ne / Ng
+    if rate_only:
+        SE_con, tran_rate_con = cal_SE_(atom, atmos, wMesh, radiation, Nh_SE, stage_pop, rate_only)
+        atmos.Nh = Ng
+        return SE_con, tran_rate_con
+
+    atmos.Nh = Ng if is_hydrogen else 0.0
+
+    SE_con, tran_rate_con = cal_SE_(atom, atmos, wMesh, radiation, Nh_SE, stage_pop)
+    atmos.Nh =  Ng
+
+    
+    return SE_con, tran_rate_con
+
+def cal_SE_with_Pg_Te_single_Atom_(atom : _Atom.Atom, atmos : _Atmosphere.Atmosphere0D, 
+                       wMesh : _WavelengthMesh.Wavelength_Mesh, 
+                       radiation : _Radiation.Radiation,
+                       stage_pop: T_UNION[T_ARRAY, None],
+                       rate_only: T_BOOL = False):
+    Pg = atmos.Pg
+    Te = atmos.Te
+    Vt = atmos.Vt
+    kTe = CST.k_ * Te
+    
+    Ti = atmos.Ti
+    kTi = kTe if Ti < 0 else CST.k_ * Ti
+
+    is_hydrogen = ( atom._atom_type ==  E_ATOM.HYDROGEN )
+
+    if stage_pop is None: Ne2Ng = 0.5
+    else: 
+        Ne2Ng = 0.0
+        for i in range(1,stage_pop.shape[0]):
+            Ne2Ng += stage_pop[i] * i
+        Ne2Ng /= stage_pop.sum()
     Ne2Ng_prev = Ne2Ng
     Nh_SE = None
 
-    Ng = Pg / (( 1. + Ne2Ng ) * kT)  # ( 0.5 * atom.Mass * CST.mH_ * Vt*Vt + ( 1. + Ne2Ng ) * kT)
+    # ICP only measures the ion pressure
+    Ng = Pg / ( 0.5 * atom.Mass * CST.mH_ * Vt*Vt + kTi)# + Ne2Ng * kTe)
     atmos.Ne = Ng * Ne2Ng
+    if rate_only:
+        SE_con, tran_rate_con = cal_SE_(atom, atmos, wMesh, radiation, Nh_SE, stage_pop, rate_only)
+        atmos.Nh = Ng
+        return SE_con, tran_rate_con
 
     atmos.Nh = Ng if is_hydrogen else 0.0
 
     while True:
-        print(f"Ne2Ng={Ne2Ng:.3E}  Ng={Ng:.3E}  Ne={atmos.Ne:.3E}")
-        SE_con, tran_rate_con = cal_SE_(atom, atmos, wMesh, radiation, Nh_SE)      
+        SE_con, tran_rate_con = cal_SE_(atom, atmos, wMesh, radiation, Nh_SE, stage_pop)      
         n_SE = SE_con.n_SE
-        Ne2Ng  = 2*n_SE[-1] + n_SE[-7:-1].sum() ##: for He
+        #Ne2Ng  = n_SE[-1] ##: without bubble effect
+        Ne2Ng  = (n_SE[:] * (atom.Level['stage'] - 1)).sum()
         Ne_SE  = Ng * Ne2Ng
         Ne_new = 0.5 * ( Ne_SE + atmos.Ne )
         #print("ratio: ", Ne2Nh, Ne2Nh_prev)
         if ( abs( Ne2Ng - Ne2Ng_prev ) / Ne2Ng_prev ) < 0.01:
-            atmos.Ne = Ne_new
+            atmos.Ne = Ne_SE#Ne_new
             break
         else:
-            Ng = Pg / (( 1. + Ne2Ng ) * kT)  # ( 0.5 * atom.Mass * CST.mH_ * Vt*Vt + ( 1. + Ne2Ng ) * kT)
+            Ng = Pg / ( 0.5 * atom.Mass * CST.mH_ * Vt*Vt + kTi)# + Ne2Ng  * kTe)
             atmos.Ne = Ne_new
             Ne2Ng_prev = Ne2Ng
 
@@ -113,54 +178,55 @@ def cal_SE_with_Pg_Te_single_Atom_(atom : _Atom.Atom, atmos : _Atmosphere.Atmosp
     
     return SE_con, tran_rate_con
 
-def cal_SE_with_Pg_Te_(atom : _Atom.Atom, atmos : _Atmosphere.Atmosphere0D, 
-                       wMesh : _WavelengthMesh.Wavelength_Mesh, 
-                       radiation : _Radiation.Radiation,
-                       Nh_SE : T_UNION[T_ARRAY, None],
-                       ) -> T_TUPLE[_Container.SE_Container,_Container.TranRates_Container] :
-    Pg = atmos.Pg
-    Te = atmos.Te
-    Vt = atmos.Vt
-    kT = CST.k_ * Te
+# def cal_SE_with_Pg_Te_(atom : _Atom.Atom, atmos : _Atmosphere.Atmosphere0D, 
+#                        wMesh : _WavelengthMesh.Wavelength_Mesh, 
+#                        radiation : _Radiation.Radiation,
+#                        Nh_SE : T_UNION[T_ARRAY, None],
+#                        ) -> T_TUPLE[_Container.SE_Container,_Container.TranRates_Container] :
+#     Pg = atmos.Pg
+#     Te = atmos.Te
+#     Vt = atmos.Vt
+#     kT = CST.k_ * Te
 
 
-    is_hydrogen = ( atom._atom_type ==  E_ATOM.HYDROGEN )
+#     is_hydrogen = ( atom._atom_type ==  E_ATOM.HYDROGEN )
 
-    Ne2Nh = 0.5
-    Ne2Nh_prev = Ne2Nh
-    if is_hydrogen:
-        atmos.Nh = Pg / ( 0.5 * _WEIGHTED_TOTAL_MASS * CST.mH_ * Vt*Vt + ( _TOTAL_ABUN + Ne2Nh ) * kT)
-        atmos.Ne = atmos.Nh * Ne2Nh
+#     Ne2Nh = 0.5
+#     Ne2Nh_prev = Ne2Nh
+#     if is_hydrogen:
+#         atmos.Nh = Pg / ( 0.5 * _WEIGHTED_TOTAL_MASS * CST.mH_ * Vt*Vt + ( _TOTAL_ABUN + Ne2Nh ) * kT)
+#         atmos.Ne = atmos.Nh * Ne2Nh
         
 
-    while True:
-        #print(f"Ne2Nh={Ne2Nh}, Ne={atmos.Ne:.2E}")
-        SE_con, tran_rate_con = cal_SE_(atom, atmos, wMesh, radiation, Nh_SE)
-        n_SE = SE_con.n_SE
+#     while True:
+#         #print(f"Ne2Nh={Ne2Nh}, Ne={atmos.Ne:.2E}")
+#         SE_con, tran_rate_con = cal_SE_(atom, atmos, wMesh, radiation, Nh_SE)
+#         n_SE = SE_con.n_SE
 
-        if is_hydrogen:
-            #print(f"{n_SE[0]:.2E}, {n_SE[-1]:.2E}")
-            Ne2Nh  = (n_SE[-1] + 1.E-4)  ##: bubble effect
-            Ne_SE  = atmos.Nh * Ne2Nh
-            Ne_new = 0.5 * ( Ne_SE + atmos.Ne )
-            #print("ratio: ", Ne2Nh, Ne2Nh_prev)
-            if ( abs( Ne2Nh - Ne2Nh_prev ) / Ne2Nh_prev ) < 0.01:
-                atmos.Ne = Ne_new
-                break
-            else:
-                atmos.Nh = Pg / ( 0.5 * _WEIGHTED_TOTAL_MASS * CST.mH_ * Vt*Vt + ( _TOTAL_ABUN + Ne2Nh ) * kT)
-                atmos.Ne = Ne_new
-                Ne2Nh_prev = Ne2Nh
-        else:
-            break
+#         if is_hydrogen:
+#             #print(f"{n_SE[0]:.2E}, {n_SE[-1]:.2E}")
+#             Ne2Nh  = (n_SE[-1] + 1.E-4)  ##: bubble effect
+#             Ne_SE  = atmos.Nh * Ne2Nh
+#             Ne_new = Ne_SE#0.5 * ( Ne_SE + atmos.Ne )
+#             #print("ratio: ", Ne2Nh, Ne2Nh_prev)
+#             if ( abs( Ne2Nh - Ne2Nh_prev ) / Ne2Nh_prev ) < 0.01:
+#                 atmos.Ne = Ne_new
+#                 break
+#             else:
+#                 atmos.Nh = Pg / ( 0.5 * _WEIGHTED_TOTAL_MASS * CST.mH_ * Vt*Vt + ( _TOTAL_ABUN + Ne2Nh ) * kT)
+#                 atmos.Ne = Ne_new
+#                 Ne2Nh_prev = Ne2Nh
+#         else:
+#             break
 
 
-    return SE_con, tran_rate_con
+#     return SE_con, tran_rate_con
 
 def cal_SE_with_Nh_Te_(atom : _Atom.Atom, atmos : _Atmosphere.Atmosphere0D, 
                        wMesh : _WavelengthMesh.Wavelength_Mesh, 
                        radiation : _Radiation.Radiation,
                        Nh_SE : T_UNION[T_ARRAY, None],
+                       stage_pop: T_UNION[T_ARRAY, None],
                        ) -> T_TUPLE[_Container.SE_Container,_Container.TranRates_Container] :
     
     Nh       = atmos.Nh                  # [/cm^{3}] 
@@ -174,7 +240,7 @@ def cal_SE_with_Nh_Te_(atom : _Atom.Atom, atmos : _Atmosphere.Atmosphere0D,
     
     while True:
         #print(f"Ne={atmos.Ne:.2E}")
-        SE_con, tran_rate_con = cal_SE_(atom, atmos, wMesh, radiation, Nh_SE)
+        SE_con, tran_rate_con = cal_SE_(atom, atmos, wMesh, radiation, Nh_SE, stage_pop)
         
         n_SE = SE_con.n_SE
         
@@ -196,7 +262,7 @@ def cal_SE_with_Ne_Te_(atom : _Atom.Atom, atmos : _Atmosphere.Atmosphere0D,
                        wMesh : _WavelengthMesh.Wavelength_Mesh, 
                        radiation : _Radiation.Radiation,
                        Nh_SE : T_UNION[T_ARRAY, None],
-                       is_single_element:bool=False,
+                       stage_pop: T_UNION[T_ARRAY, None],
                        ) -> T_TUPLE[_Container.SE_Container,_Container.TranRates_Container] :
     
 ##    is_hydrogen = ( atom._atom_type ==  E_ATOM.HYDROGEN )
@@ -213,34 +279,49 @@ def cal_SE_with_Ne_Te_(atom : _Atom.Atom, atmos : _Atmosphere.Atmosphere0D,
 ##            atmos.Nh = 2 * atmos.Ne
 ##    else:
 ##        atmos.Nh  = atmos.Ne / ( 1.E-4 + Nh_SE[-1] )          # [cm^{-3}]
-    
-    is_hydrogen = ( atom._atom_type ==  E_ATOM.HYDROGEN )
-    
+
     if (Nh_SE is None):
         atmos.Nh = 2 * atmos.Ne
     else:
         atmos.Nh = atmos.Ne / ( 1.E-4 + Nh_SE[-1] )
-        
-    if is_single_element:
-        atmos.Nh = 0.0
-        if (Nh_SE is not None) and (is_hydrogen):
-            atmos.Nh = atmos.Ne / ( Nh_SE[-1] )
 
-    SE_con, tran_rate_con = cal_SE_(atom, atmos, wMesh, radiation, Nh_SE)
+    SE_con, tran_rate_con = cal_SE_(atom, atmos, wMesh, radiation, Nh_SE, stage_pop)
 
-    if is_hydrogen :
+    if is_hydrogen := ( atom._atom_type ==  E_ATOM.HYDROGEN ):
         atmos.Nh = atmos.Ne / ( 1.E-4 + SE_con.n_SE[-1] )
-        
-    if is_single_element:
-        atmos.Nh = atmos.Ne / SE_con.n_SE[-1]
 
     return SE_con, tran_rate_con
+
+def make_ion_pop_(atom : _Atom.Atom, stage_pop: T_UNION[T_ARRAY, None]):
+    
+    nLevel = atom.nLevel
+    ion_pop : T_ARRAY = _numpy.ones(nLevel, dtype=DT_NB_FLOAT) * -1
+    if stage_pop is None: return ion_pop
+
+    if stage_pop.ndim != 1:
+        raise ValueError(f"stage_pop must be a 1 dimensional array")
+    stages = atom.Level['stage']
+    nstage = len(set(stages.tolist()))
+    if stage_pop.size != nstage:
+        raise ValueError(f"stage_pop has size={stage_pop.size}, conflicts with the given atomic model has number of ionization stage = {nstage}")
+    ##: the last level of each stage is set to stage_pop
+    
+    for i in range(nLevel-1):
+        st:T_INT = stages[i]
+        st_next:T_INT = stages[i+1]
+        if st < st_next:
+            ion_pop[i] = stage_pop[st-1] # st starts from 1
+    ion_pop[-1] = stage_pop[-1]
+
+    return ion_pop
 
     
 def cal_SE_(atom : _Atom.Atom, atmos : _Atmosphere.Atmosphere0D, 
             wMesh : _WavelengthMesh.Wavelength_Mesh, 
             radiation : _Radiation.Radiation,
             Nh_SE : T_UNION[T_ARRAY, None],
+            stage_pop: T_UNION[T_ARRAY, None],
+            rate_only:T_BOOL=False,
             ) -> T_TUPLE[_Container.SE_Container,_Container.TranRates_Container] :
     ##: TODO: instead of using background radiation in radiation struct
     ##        use an updatable MeanIntensity struct for lines and PI_intensity
@@ -287,6 +368,8 @@ def cal_SE_(atom : _Atom.Atom, atmos : _Atmosphere.Atmosphere0D,
     Vd              = atmos.Vd
     Tr              = atmos.Tr
 
+    Ti              = Te if atmos.Ti < 0 else atmos.Ti
+
     use_Tr          = atmos.use_Tr
 
     doppler_shift_continuum = atmos.doppler_shift_continuum
@@ -309,6 +392,7 @@ def cal_SE_(atom : _Atom.Atom, atmos : _Atmosphere.Atmosphere0D,
     idxI[nLine:] = Cont["idxI"][:]
     idxJ[nLine:] = Cont["idxJ"][:]
 
+    ion_pop = make_ion_pop_(atom, stage_pop)
     ## : Given ..., perform SE to calculate n_SE
 
     n_LTE , nj_by_ni = _ni_nj_LTE_(Level, Line, Cont, Te, Ne)
@@ -323,7 +407,7 @@ def cal_SE_(atom : _Atom.Atom, atmos : _Atmosphere.Atmosphere0D,
     Bij_Jbar, Bji_Jbar, wave_mesh_cm_shifted_all, absorb_prof_cm_all, Jbar_all  = \
         _B_Jbar_(
             Line, Line_mesh_Coe, Line_mesh[:], Line_mesh_idxs[:,:],
-            Te, Vt, Vd, Ne, Nh_I_ground, Mass, atom_type, backRad[:,:], Tr, use_Tr
+            Te, Ti, Vt, Vd, Ne, Nh_I_ground, Mass, atom_type, backRad[:,:], Tr, use_Tr
         )
 
     Cij = _get_Cij_(
@@ -340,7 +424,7 @@ def cal_SE_(atom : _Atom.Atom, atmos : _Atmosphere.Atmosphere0D,
     n_SE, Rmat, Cmat = _solve_SE_( 
         nLevel, idxI[:], idxJ[:], 
         Rji_spon[:], Rji_stim[:], Rij[:], 
-        Cji[:], Cij[:], Ne
+        Cji[:], Cij[:], Ne, ion_pop, rate_only,
         )
 
     SE_con = _Container.SE_Container(
@@ -488,7 +572,8 @@ def _bf_R_rate_(Cont : T_ARRAY, Cont_mesh : T_ARRAY, Te : T_FLOAT,
 
 def _B_Jbar_(Line : T_ARRAY, Line_mesh_Coe : T_ARRAY,
              Line_mesh : T_ARRAY, Line_mesh_idxs : T_ARRAY, 
-             Te : T_FLOAT, Vt : T_FLOAT, Vd : T_FLOAT, 
+             Te : T_FLOAT, Ti : T_FLOAT,
+             Vt : T_FLOAT, Vd : T_FLOAT, 
              Ne : T_FLOAT, Nh_I_ground : T_FLOAT, 
              Mass : T_FLOAT, atom_type : T_E_ATOM,
              backRad : T_ARRAY, Tr : T_FLOAT, use_Tr : T_BOOL,
@@ -519,7 +604,7 @@ def _B_Jbar_(Line : T_ARRAY, Line_mesh_Coe : T_ARRAY,
         Bji = Line['BJI'][k]
         w0  = Line['w0'][k]
         f0  = Line['f0'][k]
-        dopWidth_cm = _BasicP.doppler_width_(w0, Te, Vt, Mass)
+        dopWidth_cm = _BasicP.doppler_width_(w0, Ti, Vt, Mass)
 
         i_start, i_end = Line_mesh_idxs[k,:]
         #Line_mesh[i_start:i_end]                                       ##: Line_mesh not used?
@@ -621,12 +706,12 @@ def _get_Cij_(Line : T_ARRAY, Cont : T_ARRAY, Te : T_FLOAT, atom_type : T_E_ATOM
                 Cij[k+nLine] = _Hydrogen.CI_rate_coe_(Cont["ni"][k],Te)
 
         else:
-
             raise ValueError("only 'CALCULATE' and 'EXPERIMENT' are valid E_ATOMIC_DATA_SOURCE.")
 
     else:
-
-        raise ValueError("currently, atomic model without continuum is not yet supported.")
+        pass
+        
+        #raise ValueError("currently, atomic model without continuum is not yet supported.")
 
     return Cij
 
@@ -651,7 +736,8 @@ def _make_Rji_Rij_(Aji : T_ARRAY, Bji_Jbar : T_ARRAY, Bij_Jbar : T_ARRAY,
 
 def _solve_SE_(nLevel : T_INT, idxI : T_ARRAY, idxJ : T_ARRAY, 
                Rji_spon : T_ARRAY, Rji_stim : T_ARRAY, Rij : T_ARRAY,
-               Cji : T_ARRAY, Cij : T_ARRAY, Ne : T_FLOAT) -> T_TUPLE[T_ARRAY,T_ARRAY,T_ARRAY] :
+               Cji : T_ARRAY, Cij : T_ARRAY, Ne : T_FLOAT,
+               ion_pop: T_ARRAY, rate_only:T_BOOL) -> T_TUPLE[T_ARRAY,T_ARRAY,T_ARRAY] :
 
     Cmat = _numpy.zeros((nLevel,nLevel), dtype=DT_NB_FLOAT)
     _SEsolver.set_matrixC_(Cmat[:,:],Cji[:],Cij[:],idxI[:],idxJ,Ne)
@@ -659,9 +745,255 @@ def _solve_SE_(nLevel : T_INT, idxI : T_ARRAY, idxJ : T_ARRAY,
     Rmat = _numpy.zeros((nLevel,nLevel), dtype=DT_NB_FLOAT)
     _SEsolver.set_matrixR_(Rmat[:,:], Rji_spon[:], Rji_stim[:], Rij[:], idxI[:], idxJ[:])
 
-    n_SE = _SEsolver.solve_SE_(Rmat, Cmat)
-
+    
+    if rate_only:
+        n_SE = _numpy.zeros(nLevel, dtype=DT_NB_FLOAT)
+    else:
+        n_SE = solve_SE_(Rmat, Cmat, ion_pop)
+    
+    ## not able to iteration fit
+    ##n_SE = solve_SE_fit_(Rmat, Cmat, ion_pop)
+    
     return n_SE, Rmat, Cmat
+
+def RC_to_A_(Rmat : T_ARRAY, Cmat : T_ARRAY):
+    
+    nLevel = Rmat.shape[0]
+    A = Cmat[:,:] + Rmat[:,:]
+    #-------------------------------------------------------------
+    # diagnal components
+    #-------------------------------------------------------------
+    for k in range(nLevel):
+        A[k,k] = -A[:,k].sum()
+
+    return A
+
+def solve_SE_(Rmat : T_ARRAY, Cmat : T_ARRAY, ion_pop: T_ARRAY):
+    r"""Solve the linear equation system of statistical equilibrium.
+        population of each stage (ionization ratio) is fixed.
+
+    Parameters
+    ----------
+
+    Rmat : T_ARRAY, (nLevel,nLevel)
+        radiative transition rate matrix, 
+        [:math:`s^{-1}`]
+
+    Cmat : T_ARRAY, (nLevel,nLevel)
+        collisional transition rate matrix,
+        [:math:`s^{-1}`]
+    
+    ion_pop : T_ARRAY, (nlevel)
+        population of each stage, only level with positive value is set by
+        constraint condition (sum up to stage population)
+        [:math:`s^{-1}`]
+
+    Returns
+    -------
+
+    nArr : T_ARRAY, (nLevel,)
+        normalized level population. 
+        [:math:`cm^{-3}`]
+
+    """
+
+    nLevel = Rmat.shape[0]
+    A = Cmat[:,:] + Rmat[:,:]
+    b = _numpy.zeros(nLevel, dtype=DT_NB_FLOAT)
+
+    #-------------------------------------------------------------
+    # diagnal components
+    #-------------------------------------------------------------
+    for k in range(nLevel):
+        A[k,k] = -A[:,k].sum()
+
+    #-------------------------------------------------------------
+    # abundance definition equation
+    #-------------------------------------------------------------
+    ##: violate physics
+    # lvl_start = 0
+    # for k in range(nLevel):
+    #     if ion_pop[k] > -0.5:
+    #         A[k,:] = 0.
+    #         A[k,lvl_start:k+1] = 1.
+    #         b[k] = ion_pop[k]
+    #         lvl_start = k+1
+    A[-1,:] = 1.
+    b[-1]   = 1.
+    #print(A,b)
+    #assert False
+
+    nArr = _numpy.linalg.solve(A, b)
+    return nArr
+
+def SEfit_all_func_(x0:T_ARRAY, Rmat : T_ARRAY, Cmat : T_ARRAY, ion_pop: T_ARRAY):
+    
+
+    nLevel = Rmat.shape[0]
+    A = Cmat[:,:] + Rmat[:,:]
+    #b = _numpy.zeros(nLevel, dtype=DT_NB_FLOAT)
+    out = _numpy.zeros(x0.shape, dtype=DT_NB_FLOAT)
+
+    #nfac = x0.size - nLevel 
+    # x0.size = nLevel + nfac
+    # x0[-nfac:] are factors
+    # x0[:-nfac] are populations
+    #-------------------------------------------------------------
+    # constrains from ionization stage population and totol population
+    # times factors to correct bound-free transition rate 
+    #-------------------------------------------------------------
+    lvl_start = 0
+    count = 0
+    for k in range(nLevel-1):
+        if ion_pop[k] > -0.5:
+            kkk = nLevel+count ## position of the corresponding parameter and output
+            A[lvl_start:k+1,k+1] *= x0[kkk]
+            A[k+1,lvl_start:k+1] *= x0[kkk]
+            ## constrain sum pop of the stage
+            out[kkk] = x0[lvl_start:k+1].sum() - ion_pop[k]
+            count += 1
+            lvl_start = k+1
+    ## constrain the total pop
+    out[nLevel] = x0[:nLevel].sum() - 1.
+    #-------------------------------------------------------------
+    # diagnal components
+    #-------------------------------------------------------------
+    for k in range(nLevel):
+        A[k,k] = -A[:,k].sum()
+
+    #-------------------------------------------------------------
+    # constrains from rate equation (except the last)
+    #-------------------------------------------------------------
+    for k in range(nLevel-1):
+        out[k] = (A[k,:] * x0[:nLevel]).sum() - 0.
+    # print("x0")
+    # print(x0)
+    # print("out")
+    # print(out)
+    return (out*out).sum()
+
+def SEfit_fac_func_(x0:T_ARRAY, Rmat : T_ARRAY, Cmat : T_ARRAY, ion_pop: T_ARRAY, nArr: T_ARRAY):
+    
+    nLevel = Rmat.shape[0]
+    A = Cmat[:,:] + Rmat[:,:]
+    b = _numpy.zeros(nLevel, dtype=DT_NB_FLOAT)
+    out = _numpy.zeros(x0.shape, dtype=DT_NB_FLOAT)
+
+    #nfac = x0.size
+    #-------------------------------------------------------------
+    # constrains from ionization stage population and totol population
+    # times factors to correct bound-free transition rate 
+    #-------------------------------------------------------------
+    lvl_start = 0
+    count = 0
+    for k in range(nLevel-1):
+        if ion_pop[k] > -0.5:
+            kkk = count ## position of the corresponding parameter and output
+            print(f"kkk={kkk}, x0[kkk]={x0[kkk]}")
+            A[lvl_start:k+1,k+1] *= x0[kkk]
+            A[k+1,lvl_start:k+1] *= x0[kkk]
+            count += 1
+            lvl_start = k+1
+
+    #-------------------------------------------------------------
+    # diagnal components
+    #-------------------------------------------------------------
+    for k in range(nLevel):
+        A[k,k] = -A[:,k].sum()
+    #-------------------------------------------------------------
+    # abundance definition
+    #-------------------------------------------------------------
+    A[-1,:] = 1.
+    b[-1]   = 1.
+    import pprint
+    nArr[:] = _numpy.linalg.solve(A, b)
+    pprint.pprint(A)
+    pprint.pprint(b)
+    pprint.pprint(nArr)
+    assert False
+    #-------------------------------------------------------------
+    # constrains from ion_pop
+    #-------------------------------------------------------------
+    lvl_start = 0
+    count = 0
+    for k in range(nLevel-1):
+        if ion_pop[k] > -0.5:
+            out[count] = nArr[lvl_start:k+1].sum() - ion_pop[k]
+            count += 1
+            lvl_start = k+1
+
+    print("x0")
+    print(x0)
+    print("out")
+    print(out)
+    print("nArr")
+    print(nArr)
+    return (out*out).sum()
+
+def solve_SE_fit_(Rmat : T_ARRAY, Cmat : T_ARRAY, ion_pop: T_ARRAY) -> T_ARRAY:
+    r"""Solve the linear equation system of statistical equilibrium.
+        population of each stage (ionization ratio) is fixed.
+
+    Parameters
+    ----------
+
+    Rmat : T_ARRAY, (nLevel,nLevel)
+        radiative transition rate matrix, 
+        [:math:`s^{-1}`]
+
+    Cmat : T_ARRAY, (nLevel,nLevel)
+        collisional transition rate matrix,
+        [:math:`s^{-1}`]
+    
+    ion_pop : T_ARRAY, (nlevel)
+        population of each stage, only level with positive value is set by
+        constraint condition (sum up to stage population)
+        [:math:`s^{-1}`]
+
+    Returns
+    -------
+
+    nArr : T_ARRAY, (nLevel,)
+        normalized level population. 
+        [:math:`cm^{-3}`]
+
+    """
+
+    nLevel = Rmat.shape[0]
+    nfac = (ion_pop > -0.5).sum()-1
+
+##: fitting population and factors simultaneously is very slow 
+    # nparam = nLevel + nfac
+    # x0     = _numpy.zeros(nparam, dtype=DT_NB_FLOAT)
+    # ## initial values
+    # x0[0] = 1.0
+    # x0[-nfac:] = 1.0
+    # ## bounds
+    # bounds = _numpy.ones((nparam,2), dtype=DT_NB_FLOAT)
+    # bounds[:,0] = 0.
+    # bounds[-nfac:,1] = 10.
+    # res = _sp_minimize(SEfit_all_func_, x0, args=(Rmat,Cmat,ion_pop))
+    # print(res.x)
+    # nArr = res.x[:nLevel].copy()
+
+
+    nparam = nfac
+    x0     = _numpy.zeros(nparam, dtype=DT_NB_FLOAT)
+    x0[:]  = 50, 1E-10
+
+    bounds = _numpy.ones((nparam,2), dtype=DT_NB_FLOAT)
+    bounds[:,0] = 0.
+    bounds[:,1] = 10.
+    nArr   =  _numpy.zeros(nLevel, dtype=DT_NB_FLOAT)
+    #res = _sp_minimize(SEfit_fac_func_, x0, args=(Rmat,Cmat,ion_pop, nArr[:]),method="Nelder-Mead", bounds=bounds,options={'maxiter':1000000000000,'disp':False})
+    res = _sp_least_squares(SEfit_fac_func_, x0, args=(Rmat,Cmat,ion_pop, nArr[:]), bounds=(0,1E4))
+    print("x0")
+    print(res.x)
+    print("res")
+    print(res.message)
+
+    return nArr
+
 
 
 
@@ -677,3 +1009,4 @@ if CFG._IS_JIT:
     _B_Jbar_         = nb_njit(**NB_NJIT_KWGS) (_B_Jbar_)
     _get_Cij_        = nb_njit(**NB_NJIT_KWGS) (_get_Cij_)
     _solve_SE_       = nb_njit(**NB_NJIT_KWGS) (_solve_SE_)
+    solve_SE_        = nb_njit(**NB_NJIT_KWGS) (solve_SE_)

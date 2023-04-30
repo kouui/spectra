@@ -153,8 +153,8 @@ def init_Atom_(conf_path : T_STR, is_hydrogen : T_BOOL = False
     # nTran nLine nCont
     #--------------------
     nLine, nCont, nTran, _has_continuum = _AtomIO.nLine_nCont_nTran_( Level["stage"] )
-    if not _has_continuum:
-        raise ValueError("Currently we don't support Atomic Model without comtinuum.")
+    #if not _has_continuum:
+    #    raise ValueError("Currently we don't support Atomic Model without comtinuum.")
     
     # ctj and idx table
     #--------------------

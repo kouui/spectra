@@ -31,6 +31,8 @@ class Atmosphere0D:
     Vd : T_FLOAT
     Vt : T_FLOAT
 
+    Ti : T_FLOAT = -1.0
+
     ndim : T_INT     = 0
     is_uniform : T_BOOL = True
 
@@ -42,6 +44,7 @@ class Atmosphere0D:
     doppler_shift_continuum : T_BOOL = False
 
     _coord_type : T_E_ATMOSPHERE_COORDINATE_TYPE = E_ATMOSPHERE_COORDINATE_TYPE.POINT
+
 
 @_dataclass(**STRUCT_KWGS_UNFROZEN)
 class AtmosphereC1D:

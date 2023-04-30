@@ -14,6 +14,7 @@ from ...Struct.Container import CloudModel as _CloudModel
 import numpy as _numpy
 
 
+
 def Level_ctj_table_to_Level_info_( Level_ctj_table : T_LIST[T_TUPLE[T_STR,T_STR,T_STR]] ) -> T_DICT[T_STR, T_LIST[T_STR]]:
 
     Level_info : T_DICT[T_STR, T_LIST[T_STR]] = {
@@ -85,3 +86,25 @@ def level_info(atom:_Atom.Atom,wl0:T_FLOAT):  # get level info
     upper = utj[1]+utj[2]
     
     return idxI,lower,idxJ,upper
+
+def line_list(atom:_Atom.Atom, Aji_min:T_FLOAT = 1E4):
+    selects : T_LIST[T_DICT[T_STR,T_INT | T_FLOAT | T_TUPLE[T_STR,T_STR,T_STR]]] = []
+    for i in range(atom.nLine):
+        wv0 = atom.Line['w0_AA'][i]
+        Aji = atom.Line['AJI'][i]
+        if Aji < Aji_min: continue
+        ctj1, ctj2 = atom._ctj_table.Line[i]
+        #print(f"{i:3d}  wavelength={wv0:10.2F}[A]  Aji={Aji:.1E}    {ctj1}<--{ctj2}")
+        selects.append( {'id':i, 'w0_AA':wv0, 'Aji':Aji, 'ctj1':ctj1, 'ctj2':ctj2} )
+    selects = sorted(selects, key=lambda x: x['w0_AA'])
+    print(f"id   wavelength[A]  Aji[s-1]   lower level ctj    -     upper level ctj ")
+    for sel in selects:
+        id = sel['id']
+        wv0 = sel['w0_AA']
+        Aji = sel['Aji']
+        ctj1 = sel['ctj1']
+        ctj2 = sel['ctj2']
+        #print(f"wavelength={wv0:10.2F}[A]  Aji={Aji:.1E}    {ctj1}<--{ctj2}")
+        print(f"{id:3d}  {wv0:10.2F}  {Aji:.1E}    {ctj1}  -  {ctj2}")
+    print(f"# selected = {len(selects)}")
+    return(selects)
