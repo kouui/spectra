@@ -44,7 +44,13 @@ def SE_to_slab_0D_(atom : _Atom.Atom, atmos : _Atmosphere.Atmosphere0D,
 
     ## 3. compute line source function
     Aji   : T_ARRAY = Line["AJI"][:]
-    Src   : T_ARRAY = ( Aji * nj ) / ( Bij * ni - Bji * nj )
+    #Src   : T_ARRAY = ( Aji * nj ) / ( Bij * ni - Bji * nj )
+    Src   : T_ARRAY = _numpy.zeros_like(Aji)
+    for k in range(0,nLine):
+        if Aji[k] <= 0. :
+            Src[k] = 0.
+        else:
+            Src[k] = ( Aji[k] * nj[k] ) / ( Bij[k] * ni[k] - Bji[k] * nj[k] )
 
     ## 4. compute optical depth given the thichness of the slab
     ## 5. compute the line profile

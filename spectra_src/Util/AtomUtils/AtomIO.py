@@ -702,7 +702,12 @@ def make_Atom_Line_(path : T_UNION[T_STR,None], Level : T_ARRAY,
         i : int = Line["idxI"][k]
         j : int = Line["idxJ"][k]
         Line["f0"][k] = (Level["erg"][j]-Level["erg"][i]) / CST.h_
-    Line["w0"][:] = CST.c_ / Line["f0"][:]
+        if Line["f0"][k] <= 0.:
+            Line["w0"][k] = 0.
+            Line["AJI"][k] = 0.
+        else:
+            Line["w0"][k] = CST.c_ / Line["f0"][k]
+    #Line["w0"][:] = CST.c_ / Line["f0"][:]
     Line["w0_AA"][:] = Line["w0"][:] * 1.E+8
 
     # read gi,gj,ni,nj
@@ -714,7 +719,12 @@ def make_Atom_Line_(path : T_UNION[T_STR,None], Level : T_ARRAY,
 
     # compute Bji, Bij
     from ...Atomic import LTELib as _LTELib
-    Line["BJI"][:], Line["BIJ"][:] = _LTELib.einsteinA_to_einsteinBs_cm_(Line["AJI"][:], Line["w0"][:], Line["gi"][:], Line["gj"][:])
+    #Line["BJI"][:], Line["BIJ"][:] = _LTELib.einsteinA_to_einsteinBs_cm_(Line["AJI"][:], Line["w0"][:], Line["gi"][:], Line["gj"][:])
+    for k in range(nLine):
+        if Line["AJI"][k] <= 0.:
+            Line["BJI"][k], Line["BIJ"][k] = 0., 0.
+            continue
+        Line["BJI"][k], Line["BIJ"][k] = _LTELib.einsteinA_to_einsteinBs_cm_(Line["AJI"][k], Line["w0"][k], Line["gi"][k], Line["gj"][k])
 
     # compute Level gamma and Line Gamma
     Line["Gamma"][:] = 0.

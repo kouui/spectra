@@ -38,7 +38,12 @@ def interp_omega_(table : T_ARRAY, Te : T_UNION[T_FLOAT,T_INT,T_ARRAY], Te_table
     T_UNION[T_FLOAT,T_ARRAY]
         CE/CI coefficient
     """
+    if table[0] == 0.:
+        omega = 0.
+        return omega
     omega = _numpy.interp( Te, Te_table[:], table[:] )  * f1 / f2
+    if not (omega > 0):
+        print(Te, Te_table[:], table[:])
     return omega
 
 @OVERLOAD

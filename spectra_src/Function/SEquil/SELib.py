@@ -508,6 +508,12 @@ def _B_Jbar_(Line : T_ARRAY, Line_mesh_Coe : T_ARRAY,
     absorb_prof_cm : T_ARRAY
     for k in range(nLine):
 
+        if Line['AJI'][k] <= 1E-10:
+            Jbar_all[k] = 0.
+            Bij_Jbar[k] = 0.
+            Bji_Jbar[k] = 0.
+            continue
+
         ## collisional broadening line width
         gamma : T_FLOAT = Line["Gamma"][k]
         if atom_type == E_ATOM.HYDROGEN:
