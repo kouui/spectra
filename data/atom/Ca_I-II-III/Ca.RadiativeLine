@@ -1,0 +1,75 @@
+#--------------------------------------------------------------------------------------------------
+nRadiative    68
+END
+#--------------------------------------------------------------------------------------------------
+prefix          3p6.
+#   conf_i      term_i      J_i         conf_j      term_j      J_j         Emission    Nlambda     BackWidth[cm/s]   Fixed       qcore       qwing       filename    
+    4s2         1S          0           4s.4p       3P          1           Voigt       15          5.E+07            0           1.50        5.00        tmp.dat     
+    4s2         1S          0           4s.4p       1P          1           Voigt       101         5.E+07            0           5.00        1000.00     tmp.dat     
+    4s.4p       3P          0           4s.5s       3S          1           Voigt       101         5.E+07            0           3.00        20.00       tmp.dat     
+    4s.4p       3P          1           4s.5s       3S          1           Voigt       41          5.E+07            0           3.00        20.00       tmp.dat     
+    4s.4p       3P          2           4s.5s       3S          1           Voigt       41          5.E+07            0           3.00        20.00       tmp.dat     
+    4s.4p       3P          0           4s.4d       3D          1           Voigt       21          5.E+07            0           3.00        50.00       tmp.dat     
+    4s.4p       3P          1           4s.4d       3D          2           Voigt       41          5.E+07            0           3.00        50.00       tmp.dat     
+    4s.4p       3P          1           4s.4d       3D          1           Voigt       41          5.E+07            0           3.00        50.00       tmp.dat     
+    4s.4p       3P          2           4s.4d       3D          3           Voigt       41          5.E+07            0           3.00        50.00       tmp.dat     
+    4s.4p       3P          2           4s.4d       3D          2           Voigt       41          5.E+07            0           2.50        40.00       tmp.dat     
+    4s.4p       3P          2           4s.4d       3D          1           Voigt       41          5.E+07            0           2.00        30.00       tmp.dat     
+    4s.4p       1P          1           4s.5s       1S          0           Voigt       21          5.E+07            0           3.00        50.00       tmp.dat     
+    4s.3d       1D          2           3d.4p       1D          2           Voigt       21          5.E+07            0           3.00        50.00       tmp.dat     
+    4s2         1S          0           4s.5p       1P          1           Voigt       21          5.E+07            0           2.00        30.00       tmp.dat     
+    4s.3d       1D          2           4s.5p       1P          1           Voigt       21          5.E+07            0           2.50        40.00       tmp.dat     
+    4s.5s       1S          0           4s.5p       1P          1           Voigt       21          5.E+07            0           3.00        50.00       tmp.dat     
+    4s.4p       1P          1           4s.4d       1D          2           Voigt       21          5.E+07            0           3.00        50.00       tmp.dat     
+    4s          2S          1/2         4p          2P          1/2         Voigt       101         5.E+07            0           30.00       1300.00     tmp.dat     
+    4s          2S          1/2         4p          2P          3/2         Voigt       101         5.E+07            0           30.00       1300.00     tmp.dat     
+    3d          2D          3/2         4p          2P          1/2         Voigt       101         5.E+07            0           50.00       120.00      tmp.dat     
+    3d          2D          3/2         4p          2P          3/2         Voigt       101         5.E+07            0           40.00       80.00       tmp.dat     
+    2d          2D          5/2         4p          2P          3/2         Voigt       201         5.E+07            0           50.00       120.00      tmp.dat     
+    3d          2D          3/2         5p          2P          1/2         Voigt       41          5.E+07            0           4.00        60.00       tmp.dat     
+    3d          2D          3/2         5p          2P          3/2         Voigt       41          5.E+07            0           4.00        60.00       tmp.dat     
+    3d          2D          3/2         4f          2F          5/2         Voigt       41          5.E+07            0           4.00        60.00       tmp.dat     
+    3d          2D          3/2         6p          2P          1/2         Voigt       41          5.E+07            0           4.00        60.00       tmp.dat     
+    3d          2D          3/2         6p          2P          3/2         Voigt       41          5.E+07            0           4.00        60.00       tmp.dat     
+    3d          2D          3/2         5f          2F          5/2         Voigt       41          5.E+07            0           4.00        60.00       tmp.dat     
+    3d          2D          3/2         6f          2F          5/2         Voigt       41          5.E+07            0           4.00        60.00       tmp.dat     
+    2d          2D          5/2         5p          2P          3/2         Voigt       41          5.E+07            0           4.00        60.00       tmp.dat     
+    2d          2D          5/2         4f          2F          7/2         Voigt       41          5.E+07            0           4.00        60.00       tmp.dat     
+    2d          2D          5/2         4f          2F          5/2         Voigt       41          5.E+07            0           4.00        60.00       tmp.dat     
+    2d          2D          5/2         6p          2P          3/2         Voigt       41          5.E+07            0           4.00        60.00       tmp.dat     
+    2d          2D          5/2         5f          2F          5/2         Voigt       41          5.E+07            0           4.00        60.00       tmp.dat     
+    2d          2D          5/2         5f          2F          7/2         Voigt       41          5.E+07            0           4.00        60.00       tmp.dat     
+    2d          2D          5/2         6f          2F          5/2         Voigt       41          5.E+07            0           4.00        60.00       tmp.dat     
+    2d          2D          5/2         6f          2F          7/2         Voigt       41          5.E+07            0           4.00        60.00       tmp.dat     
+    4p          2P          1/2         5s          2S          1/2         Voigt       41          5.E+07            0           4.00        60.00       tmp.dat     
+    4p          2P          1/2         4d          2D          3/2         Voigt       41          5.E+07            0           4.00        60.00       tmp.dat     
+    4p          2P          1/2         6s          2S          1/2         Voigt       41          5.E+07            0           4.00        60.00       tmp.dat     
+    4p          2P          1/2         5d          2D          3/2         Voigt       41          5.E+07            0           4.00        60.00       tmp.dat     
+    4p          2P          1/2         7s          2S          1/2         Voigt       41          5.E+07            0           4.00        60.00       tmp.dat     
+    4p          2P          1/2         6d          2D          3/2         Voigt       41          5.E+07            0           4.00        60.00       tmp.dat     
+    4p          2P          1/2         8s          2S          1/2         Voigt       41          5.E+07            0           4.00        60.00       tmp.dat     
+    4p          2P          3/2         5s          2S          1/2         Voigt       41          5.E+07            0           4.00        60.00       tmp.dat     
+    4p          2P          3/2         4d          2D          3/2         Voigt       41          5.E+07            0           4.00        60.00       tmp.dat     
+    4p          2P          3/2         4d          2D          5/2         Voigt       41          5.E+07            0           4.00        60.00       tmp.dat     
+    4p          2P          3/2         6s          2S          1/2         Voigt       41          5.E+07            0           4.00        60.00       tmp.dat     
+    4p          2P          3/2         5d          2D          3/2         Voigt       41          5.E+07            0           4.00        60.00       tmp.dat     
+    4p          2P          3/2         5d          2D          5/2         Voigt       41          5.E+07            0           4.00        60.00       tmp.dat     
+    4p          2P          3/2         7s          2S          1/2         Voigt       41          5.E+07            0           4.00        60.00       tmp.dat     
+    4p          2P          3/2         6d          2D          3/2         Voigt       41          5.E+07            0           4.00        60.00       tmp.dat     
+    4p          2P          3/2         6d          2D          5/2         Voigt       41          5.E+07            0           4.00        60.00       tmp.dat     
+    4p          2P          3/2         8s          2S          1/2         Voigt       41          5.E+07            0           4.00        60.00       tmp.dat     
+    5s          2S          1/2         5p          2P          1/2         Voigt       41          5.E+07            0           4.00        60.00       tmp.dat     
+    5s          2S          1/2         5p          2P          3/2         Voigt       41          5.E+07            0           4.00        60.00       tmp.dat     
+    5p          2P          1/2         6s          2S          1/2         Voigt       41          5.E+07            0           4.00        60.00       tmp.dat     
+    5p          2P          1/2         5d          2D          3/2         Voigt       41          5.E+07            0           4.00        60.00       tmp.dat     
+    5p          2P          1/2         7s          2S          1/2         Voigt       41          5.E+07            0           4.00        60.00       tmp.dat     
+    5p          2P          1/2         6d          2D          3/2         Voigt       41          5.E+07            0           4.00        60.00       tmp.dat     
+    5p          2P          1/2         8s          2S          1/2         Voigt       41          5.E+07            0           4.00        60.00       tmp.dat     
+    5p          2P          3/2         6s          2S          1/2         Voigt       41          5.E+07            0           4.00        60.00       tmp.dat     
+    5p          2P          3/2         5d          2D          3/2         Voigt       41          5.E+07            0           4.00        60.00       tmp.dat     
+    5p          2P          3/2         5d          2D          5/2         Voigt       41          5.E+07            0           4.00        60.00       tmp.dat     
+    5p          2P          3/2         7s          2S          1/2         Voigt       41          5.E+07            0           4.00        60.00       tmp.dat     
+    5p          2P          3/2         6d          2D          3/2         Voigt       41          5.E+07            0           4.00        60.00       tmp.dat     
+    5p          2P          3/2         6d          2D          5/2         Voigt       41          5.E+07            0           4.00        60.00       tmp.dat     
+    5p          2P          3/2         8s          2S          1/2         Voigt       41          5.E+07            0           4.00        60.00       tmp.dat     
+END

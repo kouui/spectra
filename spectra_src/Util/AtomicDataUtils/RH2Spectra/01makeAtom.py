@@ -1,3 +1,9 @@
+# usage : 
+# $ conda activate <spectra-env>
+# $ cd /path/to/spectra/data/atom/Ca_I-II-III
+# $ python ../../../spectra_src/Util/AtomicDataUtils/RH2Spectra/01makeAtom.py CaI+II_45.atom.RH.20220802.txt CaI+II_45.RH.configuration-table.txt ./ -file-prefix rh.
+
+
 #from glob import glob
 import argparse
 from pprint import pprint
@@ -118,7 +124,10 @@ def read_table_(file: str):
             J    = words[3]
             g    = int(words[4])
             stage= int(words[5])
-            ev   = float( words[6] )
+            if '+' in words[6]:
+                ev = sum([float(v) for v in words[6].split('+')])
+            else:
+                ev   = float( words[6] )
             # datas[idx] = {
             #     'conf': conf,
             #     'term': conf,
@@ -859,7 +868,7 @@ def main():
     parser.add_argument('rhpath', metavar='rhpath', type=str,
                     help='path of rh *.atom file')
     parser.add_argument('conftable', metavar='conftable', type=str,
-                    help='path of RH level index --> configuration,... table')
+                    help='path of RH level index --> *.configuration-table.txt')
     parser.add_argument('symbol', metavar='symbol', type=str,
                     help='atomic symbol of the element')
     parser.add_argument('--outdir', metavar='DIR', 
@@ -874,9 +883,15 @@ def main():
     parser.add_argument('--file-prefix', metavar='fprefix',
                     type=str, default='tmp.',
                     help='prefix of generated configuration files')
-    args = parser.parse_args()
-    #print(args)
+    parser.add_argument('--indir', metavar="indir",
+                    type=str, default='',
+                    help='if directory is defined, then use directory/{basename of rhpath/conftable}')
+    parser.add_argument('--degenerate', metavar='degeneratefile',
+                    type=str, default='',
+                    help='json file to define what levels should be degenerated')
     
+    args = parser.parse_args()
+
 
     ##: step 0. check atomic symbol
     sym = args.symbol
@@ -885,6 +900,7 @@ def main():
 
     ##: step 1 create output folder if not exist
     outdir = args.outdir
+    outdir = os.path.abspath(outdir)
     if not os.path.exists(outdir): os.makedirs(outdir, exist_ok=True)
 
     ##: step 2. create struct for output filenames
@@ -900,6 +916,11 @@ def main():
         Gro   = os.path.join(outdir, f'{fn}.Grotrian'),
         Conf  = os.path.join(outdir, f'{fn}.conf'),
     )
+
+    if len(args.indir) > 0:
+        args.indir = os.path.abspath(args.indir)
+        args.rhpath = os.path.join(args.indir, os.path.basename(args.rhpath))
+        args.conftable = os.path.join(args.indir, os.path.basename(args.conftable))
 
     ##: step 3. read level index --> configuration, term, j table
     tables, prefix = read_table_(args.conftable)
@@ -946,6 +967,11 @@ def main():
 
     ##: step 16. make .conf file
     make_conf_file_( afile, afile.Conf, outdir)
+
+    ##: step 17. check level combine
+    if len(args.degenerate) > 0:
+        print(f"to degenerate levels with conf file : {args.degenerate}")    
+    
 
     return 0
 
