@@ -5,6 +5,8 @@
 # VERSION
 # 0.1.0 
 #    2021/05/18   u.k.   spectra-re
+# 0.1.2
+#    2023/07/04   u.k.   in interp_omega_, when table[:] are 0s, return 0
 #-------------------------------------------------------------------------------
 
 from ..ImportAll import *

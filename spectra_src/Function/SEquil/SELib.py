@@ -40,6 +40,8 @@
 # 0.1.0
 #    2023/04/29   u.k.
 #        - is_single_element keyword in cal_SE_with_Ne_Te_
+# 0.1.2
+#    2023/07/04   u.k.   in _B_Jbar_, when Aji close to 0, skip calculation and assign 0 to the result
 #-------------------------------------------------------------------------------
 
 from ...ImportAll import *

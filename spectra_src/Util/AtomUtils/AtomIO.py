@@ -13,6 +13,8 @@
 #    2021/05/18   u.k.   spectra-re
 # 0.1.1
 #    2022/06/26   u.k.   data & Hydrogenic mixed photoionization cross section 
+# 0.1.2
+#    2023/07/04   u.k.   when f0 equals 0, w0 Aji Bji Bij are set to 0
 #-------------------------------------------------------------------------------
 
 from ...ImportAll import *

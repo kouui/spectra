@@ -6,6 +6,8 @@
 # 0.1.0 
 #    2021/05/18   u.k.   spectra-re
 #    2022/07/20   k.i.   add Src, tau_1D
+# 0.1.2
+#    2023/07/04   u.k.   when Aji equals to 0, set Src to 0 to avoid the zero division warning
 #-------------------------------------------------------------------------------
 
 from typing import Container
